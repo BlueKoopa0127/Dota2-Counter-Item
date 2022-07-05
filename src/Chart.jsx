@@ -50,7 +50,8 @@ export function ChartTest() {
 export default function Chart(props) {
   const xPadding = 100,
     yPadding = 100,
-    itemSize = 25;
+    itemSize = 25,
+    textPadding = 5;
   const xScale = d3
     .scaleLinear()
     .domain([0, 1])
@@ -63,8 +64,8 @@ export default function Chart(props) {
     .nice();
   const colorScale = d3
     .scaleLinear()
-    .domain([-1, 1])
-    .range(["blue", "red"])
+    .domain([-1, 0, 1])
+    .range(["blue", "white", "red"])
     .nice();
   return (
     <svg viewBox={`0 0 ${props.width} ${props.height}`}>
@@ -72,6 +73,7 @@ export default function Chart(props) {
       <XAxis
         xPadding={xPadding}
         yPadding={yPadding}
+        textPadding={textPadding}
         itemSize={itemSize}
         data={props.data}
       />
@@ -79,6 +81,7 @@ export default function Chart(props) {
         xPadding={xPadding}
         yPadding={yPadding}
         itemSize={itemSize}
+        textPadding={textPadding}
         data={props.data}
       />
       <Content
@@ -109,12 +112,15 @@ function XAxis(props) {
   return (
     <g>
       {props.data.map((item, index) => {
+        const x = props.xPadding,
+          y = props.itemSize * (index + 1 - 0.5) + props.yPadding;
         return (
           <text
             key={item.name}
-            x={props.xPadding}
-            y={props.itemSize * (index + 1) + props.yPadding}
+            x={x - props.textPadding}
+            y={y + 2}
             textAnchor="end"
+            dominantBaseline="middle"
           >
             {item.name}
           </text>
@@ -128,14 +134,15 @@ function YAxis(props) {
   return (
     <g>
       {props.data[0].items.map((item, index) => {
-        const x = props.itemSize * (index + 1) + props.xPadding,
+        const x = props.itemSize * (index + 1 - 0.5) + props.xPadding,
           y = props.yPadding;
         return (
           <text
             key={item.name}
-            x={x}
-            y={y}
+            x={x + props.textPadding}
+            y={y + 2}
             textAnchor="start"
+            dominantBaseline="middle"
             transform={`rotate(-90, ${x}, ${y})`}
           >
             {item.name}
