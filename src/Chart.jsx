@@ -16,7 +16,7 @@ export function ChartTest() {
           },
           {
             name: "BKB",
-            winDiff: 0.0,
+            winDiff: -0.1,
             useRate: 0.7,
           },
         ],
@@ -26,12 +26,12 @@ export function ChartTest() {
         items: [
           {
             name: "Diff",
-            winDiff: 0.0,
+            winDiff: 0.3,
             useRate: 0.1,
           },
           {
             name: "BKB",
-            winDiff: 0.1,
+            winDiff: -0.3,
             useRate: 0.7,
           },
         ],
