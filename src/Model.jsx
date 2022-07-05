@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-export function Test() {
+export function ModelTest() {
   const sql = "https://api.opendota.com/api/explorer?sql=";
   const tables = [
     "player_matches",
@@ -18,6 +18,12 @@ export function Test() {
   const [datas, setDatas] = useState(null);
 
   const hero_id = 1;
+  const match_id = 6641112390;
+
+  /*
+  select hero, item, win_rate, use_rate 
+  select match_id, hero_id, item_id, win, use
+  */
 
   useEffect(() => {
     fetchDataJson(
@@ -42,7 +48,30 @@ export function Test() {
 
   useEffect(() => {
     fetchDataJson(
-      `${sql}select * from ${tables[0]} where hero_id=${hero_id} limit 100`,
+      `${sql}
+      select *
+      from(
+        select
+        match_id,
+        case
+        when player_slot in(0,1,2,3,4)
+        then true
+        when player_slot in(128,129,130,131,132)
+        then false
+        else null
+        end as is_radiant,
+        hero_id
+        from ${tables[0]}
+      ) as t where match_id=${match_id} and 
+      case
+      when (select count(hero_id=${hero_id} or null) from ${tables[0]} where match_id=${match_id} and player_slot in(0,1,2,3,4)) = 1
+      then is_radiant=false
+      when (select count(hero_id=${hero_id} or null) from ${tables[0]} where match_id=${match_id} and player_slot in(128,129,130,131,132)) = 1
+      then is_radiant=true
+      else null
+      end
+      ;
+      `,
       setDatas
     );
   }, []);
