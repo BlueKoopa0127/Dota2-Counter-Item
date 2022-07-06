@@ -48,48 +48,44 @@ export function ChartTest() {
 }
 
 export default function Chart(props) {
-  const xPadding = 100,
-    yPadding = 100,
-    itemSize = 25,
+  const padding = { x: 100, y: 100 };
+  const itemSize = 25,
     textPadding = 5;
-  const xScale = d3
-    .scaleLinear()
-    .domain([0, 1])
-    .range([xPadding, xPadding + itemSize * 1])
-    .nice();
-  const yScale = d3
-    .scaleLinear()
-    .domain([0, 1])
-    .range([yPadding, yPadding + itemSize * 1])
-    .nice();
-  const colorScale = d3
-    .scaleLinear()
-    .domain([-1, 0, 1])
-    .range(["blue", "white", "red"])
-    .nice();
+  const scale = {
+    x: d3
+      .scaleLinear()
+      .domain([0, 1])
+      .range([padding.x, padding.x + itemSize * 1])
+      .nice(),
+    y: d3
+      .scaleLinear()
+      .domain([0, 1])
+      .range([padding.y, padding.y + itemSize * 1])
+      .nice(),
+    color: d3
+      .scaleLinear()
+      .domain([-1, 0, 1])
+      .range(["blue", "white", "red"])
+      .nice(),
+  };
   return (
     <svg viewBox={`0 0 ${props.width} ${props.height}`}>
       <BackGround width={props.width} height={props.height} />
       <XAxis
-        xPadding={xPadding}
-        yPadding={yPadding}
+        data={props.data}
+        scale={scale}
+        padding={padding}
         textPadding={textPadding}
         itemSize={itemSize}
-        data={props.data}
       />
       <YAxis
-        xPadding={xPadding}
-        yPadding={yPadding}
-        itemSize={itemSize}
+        data={props.data}
+        scale={scale}
+        padding={padding}
         textPadding={textPadding}
-        data={props.data}
+        itemSize={itemSize}
       />
-      <Content
-        data={props.data}
-        xScale={xScale}
-        yScale={yScale}
-        colorScale={colorScale}
-      />
+      <Content data={props.data} scale={scale} itemSize={itemSize} />
     </svg>
   );
 }
@@ -111,31 +107,9 @@ function BackGround(props) {
 function XAxis(props) {
   return (
     <g>
-      {props.data.map((item, index) => {
-        const x = props.xPadding,
-          y = props.itemSize * (index + 1 - 0.5) + props.yPadding;
-        return (
-          <text
-            key={item.name}
-            x={x - props.textPadding}
-            y={y + 2}
-            textAnchor="end"
-            dominantBaseline="middle"
-          >
-            {item.name}
-          </text>
-        );
-      })}
-    </g>
-  );
-}
-
-function YAxis(props) {
-  return (
-    <g>
       {props.data[0].items.map((item, index) => {
-        const x = props.itemSize * (index + 1 - 0.5) + props.xPadding,
-          y = props.yPadding;
+        const x = props.scale.x(index + 0.5),
+          y = props.padding.y;
         return (
           <text
             key={item.name}
@@ -153,8 +127,29 @@ function YAxis(props) {
   );
 }
 
+function YAxis(props) {
+  return (
+    <g>
+      {props.data.map((item, index) => {
+        const x = props.padding.x,
+          y = props.scale.y(index + 0.5);
+        return (
+          <text
+            key={item.name}
+            x={x - props.textPadding}
+            y={y + 2}
+            textAnchor="end"
+            dominantBaseline="middle"
+          >
+            {item.name}
+          </text>
+        );
+      })}
+    </g>
+  );
+}
+
 function Content(props) {
-  console.log(props.data);
   return (
     <g>
       {props.data.map((hero, heroIndex) => {
@@ -164,11 +159,11 @@ function Content(props) {
               return (
                 <rect
                   key={itemIndex}
-                  x={props.xScale(itemIndex)}
-                  y={props.yScale(heroIndex)}
-                  width={25}
-                  height={25}
-                  fill={props.colorScale(item.winDiff)}
+                  x={props.scale.x(itemIndex)}
+                  y={props.scale.y(heroIndex)}
+                  width={props.itemSize}
+                  height={props.itemSize}
+                  fill={props.scale.color(item.winDiff)}
                 />
               );
             })}
