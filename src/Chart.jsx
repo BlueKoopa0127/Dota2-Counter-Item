@@ -183,7 +183,8 @@ function Legend(props) {
   const x = 50,
     y = 50,
     w = 200,
-    h = 50;
+    h = 50,
+    textY = y - 5;
   return (
     <g>
       <defs>
@@ -193,13 +194,13 @@ function Legend(props) {
           <stop offset={1} stop-color="red" />
         </linearGradient>
       </defs>
-      <text x={x} y={y - 5} fill="black" textAnchor="middle">
+      <text x={x} y={textY} fill="black" textAnchor="middle">
         -1
       </text>
-      <text x={x + w / 2} y={y - 5} fill="black" textAnchor="middle">
+      <text x={x + w / 2} y={textY} fill="black" textAnchor="middle">
         0
       </text>
-      <text x={x + w} y={y - 5} fill="black" textAnchor="middle">
+      <text x={x + w} y={textY} fill="black" textAnchor="middle">
         1
       </text>
       <rect x={x} y={y} width={w} height={h} fill="url(#legend)" />
