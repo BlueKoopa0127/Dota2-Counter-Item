@@ -185,24 +185,31 @@ function Legend(props) {
     w = 200,
     h = 50,
     textY = y - 5;
+  function LegendText(props) {
+    return (
+      <text
+        x={props.x}
+        y={props.y}
+        fill="black"
+        textAnchor="middle"
+        style={{ userSelect: "none" }}
+      >
+        {props.n}
+      </text>
+    );
+  }
   return (
     <g>
       <defs>
         <linearGradient id="legend" x1={0} x2={1} y1={0} y2={0}>
-          <stop offset={0} stop-color="blue" />
-          <stop offset={0.5} stop-color="white" />
-          <stop offset={1} stop-color="red" />
+          <stop offset={0} stopColor="blue" />
+          <stop offset={0.5} stopColor="white" />
+          <stop offset={1} stopColor="red" />
         </linearGradient>
       </defs>
-      <text x={x} y={textY} fill="black" textAnchor="middle">
-        -1
-      </text>
-      <text x={x + w / 2} y={textY} fill="black" textAnchor="middle">
-        0
-      </text>
-      <text x={x + w} y={textY} fill="black" textAnchor="middle">
-        1
-      </text>
+      <LegendText x={x} y={textY} n={-1} />
+      <LegendText x={x + w / 2} y={textY} n={0} />
+      <LegendText x={x + w} y={textY} n={1} />
       <rect x={x} y={y} width={w} height={h} fill="url(#legend)" />
     </g>
   );
