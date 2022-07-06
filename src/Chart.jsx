@@ -48,7 +48,7 @@ export function ChartTest() {
 }
 
 export default function Chart(props) {
-  const padding = { x: 100, y: 100 };
+  const padding = { x: 100, y: 200 };
   const itemSize = 25,
     textPadding = 5;
   const scale = {
@@ -86,6 +86,7 @@ export default function Chart(props) {
         itemSize={itemSize}
       />
       <Content data={props.data} scale={scale} itemSize={itemSize} />
+      <Legend />
     </svg>
   );
 }
@@ -164,12 +165,44 @@ function Content(props) {
                   width={props.itemSize}
                   height={props.itemSize}
                   fill={props.scale.color(item.winDiff)}
-                />
+                >
+                  <title>
+                    {hero.name} * {item.name} ({item.winDiff})
+                  </title>
+                </rect>
               );
             })}
           </g>
         );
       })}
+    </g>
+  );
+}
+
+function Legend(props) {
+  const x = 50,
+    y = 50,
+    w = 200,
+    h = 50;
+  return (
+    <g>
+      <defs>
+        <linearGradient id="legend" x1={0} x2={1} y1={0} y2={0}>
+          <stop offset={0} stop-color="blue" />
+          <stop offset={0.5} stop-color="white" />
+          <stop offset={1} stop-color="red" />
+        </linearGradient>
+      </defs>
+      <text x={x} y={y - 5} fill="black" textAnchor="middle">
+        -1
+      </text>
+      <text x={x + w / 2} y={y - 5} fill="black" textAnchor="middle">
+        0
+      </text>
+      <text x={x + w} y={y - 5} fill="black" textAnchor="middle">
+        1
+      </text>
+      <rect x={x} y={y} width={w} height={h} fill="url(#legend)" />
     </g>
   );
 }
