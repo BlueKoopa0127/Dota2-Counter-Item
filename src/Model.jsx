@@ -19,35 +19,46 @@ export function ModelTest() {
   const [datas, setDatas] = useState(null);
 
   const hero_id = 1;
-  const match_id = 6641112390;
+  const match_id = 6660010209;
 
   useEffect(() => {
     fetchDataJson(
       `${sql}
-      select ${tables[2]}.id, ${tables[2]}.localized_name as hero, ${tables[3]}.localized_name as item, 0 as win_rate_diff, 0 as use_rate
-      from ${tables[2]}
-      right outer join ${tables[3]} on true
-      where ${tables[3]}.localized_name not like 'Recipe:%25'
-      order by id asc
+      select ${tables[1]}.match_id, hero_id, item_0, item_1, item_2, item_3, item_4, item_5, item_neutral,
+      case
+        when player_slot in(0,1,2,3,4)
+          then radiant_win
+        when player_slot in(128,129,130,131,132)
+          then not radiant_win
+        else null
+      end as win
+      from ${tables[1]} 
+      inner join ${tables[7]} on ${tables[1]}.match_id=${tables[7]}.match_id
+      right outer join ${tables[0]} on ${tables[1]}.match_id=${tables[0]}.match_id
+      where patch='7.31'
+      order by ${tables[1]}.match_id desc limit 80000 
       ;`,
-      setHeros
+      setDatas
     );
   }, []);
 
   useEffect(() => {
-    const query = encodeURI(`select id, localized_name
-    from ${tables[3]}
-    where localized_name not like 'Recipe:%'
-    order by id asc
-    ;`);
-
-    fetchDataJson(`${sql}${query}`, setItems);
+    fetchDataJson(
+      `${sql}
+      select * from ${tables[0]} where match_id=${match_id}
+      ;`,
+      setDatas
+    );
   }, []);
 
-  /*
-  select hero, item, win_rate, use_rate 
-  select match_id, hero_id, item_id, win, use
-  */
+  useEffect(() => {
+    fetchDataJson(
+      `${sql}
+      select * from ${tables[2]} where id=${64}
+      ;`,
+      setDatas
+    );
+  }, []);
 
   /*useEffect(() => {
     fetchDataJson(
@@ -78,21 +89,21 @@ export function ModelTest() {
         select
         match_id,
         case
-        when player_slot in(0,1,2,3,4)
-        then true
-        when player_slot in(128,129,130,131,132)
-        then false
-        else null
+          when player_slot in(0,1,2,3,4)
+            then true
+          when player_slot in(128,129,130,131,132)
+            then false
+          else null
         end as is_radiant,
         hero_id
         from ${tables[0]}
       ) as t where match_id=${match_id} and 
       case
-      when (select count(hero_id=${hero_id} or null) from ${tables[0]} where match_id=${match_id} and player_slot in(0,1,2,3,4)) = 1
-      then is_radiant=false
-      when (select count(hero_id=${hero_id} or null) from ${tables[0]} where match_id=${match_id} and player_slot in(128,129,130,131,132)) = 1
-      then is_radiant=true
-      else null
+        when (select count(hero_id=${hero_id} or null) from ${tables[0]} where match_id=${match_id} and player_slot in(0,1,2,3,4)) = 1
+          then is_radiant=false
+        when (select count(hero_id=${hero_id} or null) from ${tables[0]} where match_id=${match_id} and player_slot in(128,129,130,131,132)) = 1
+          then is_radiant=true
+        else null
       end
       ;
       `,
