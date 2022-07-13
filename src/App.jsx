@@ -1,10 +1,18 @@
 import { useEffect, useState } from "react";
 import Chart from "./Chart";
+import { getHeros } from "./Model";
 
 export default function App() {
+  const [heros, setHeros] = useState(null);
+  getHeros(setHeros);
+
+  if (heros === null) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div>
-      <h1>Hello, World!</h1>
+      <Chart width={800} height={800} data={heros} />;
     </div>
   );
 }
