@@ -14,18 +14,42 @@ export function ModelTest() {
     "match_patch",
   ];
   const [columns, setColumns] = useState(null);
+  const [heros, setHeros] = useState(null);
   const [items, setItems] = useState(null);
   const [datas, setDatas] = useState(null);
 
   const hero_id = 1;
   const match_id = 6641112390;
 
+  useEffect(() => {
+    fetchDataJson(
+      `${sql}
+      select ${tables[2]}.id, ${tables[2]}.localized_name as hero, ${tables[3]}.localized_name as item, 0 as win_rate_diff, 0 as use_rate
+      from ${tables[2]}
+      right outer join ${tables[3]} on true
+      where ${tables[3]}.localized_name not like 'Recipe:%25'
+      order by id asc
+      ;`,
+      setHeros
+    );
+  }, []);
+
+  useEffect(() => {
+    const query = encodeURI(`select id, localized_name
+    from ${tables[3]}
+    where localized_name not like 'Recipe:%'
+    order by id asc
+    ;`);
+
+    fetchDataJson(`${sql}${query}`, setItems);
+  }, []);
+
   /*
   select hero, item, win_rate, use_rate 
   select match_id, hero_id, item_id, win, use
   */
 
-  useEffect(() => {
+  /*useEffect(() => {
     fetchDataJson(
       `${sql}
       select ${tables[0]}.match_id,player_slot,radiant_win,${tables[2]}.localized_name,
@@ -106,9 +130,60 @@ export function ModelTest() {
   return <div>test</div>;
 }
 
-async function fetchDataJson(url, setData) {
+export function getHeros(setHeros) {
+  const sql = "https://api.opendota.com/api/explorer?sql=";
+  const tables = [
+    "player_matches",
+    "matches",
+    "heroes",
+    "items",
+
+    "picks_bans",
+    "public_matches",
+    "match_logs",
+    "match_patch",
+  ];
+
+  useEffect(() => {
+    fetchDataJson(
+      `${sql}
+      select ${tables[2]}.id as id, ${tables[3]}.id as item_id, ${tables[2]}.localized_name as hero, ${tables[3]}.localized_name as item, 0.3 as win_rate_diff, 0 as use_rate
+      from ${tables[2]}
+      right outer join ${tables[3]} on true
+      where ${tables[3]}.localized_name not like 'Recipe:%25'
+      order by id asc
+      ;`,
+      convert,
+      setHeros
+    );
+  }, []);
+}
+
+function convert(json, setData) {
+  const heros = Array.from(new Set(json.rows.map(({ hero }) => hero)));
+  const test = heros.map((hero) => {
+    return {
+      id: json.rows.find((element) => element.hero === hero).id,
+      name: hero,
+      items: json.rows
+        .filter((element) => element.hero === hero)
+        .map((element) => {
+          return {
+            id: element.item_id,
+            name: element.item,
+            winRateDiff: element.win_rate_diff,
+            useRate: element.use_rate,
+          };
+        }),
+    };
+  });
+  console.log(test);
+  setData(test);
+}
+
+async function fetchDataJson(url, convert, setData) {
   const response = await fetch(url);
   const json = await response.json();
   console.log(json);
-  setData(json);
+  convert(json, setData);
 }
