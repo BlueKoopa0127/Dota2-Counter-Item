@@ -7,31 +7,37 @@ export function ChartTest() {
   if (data === null) {
     setData([
       {
+        id: 0,
         name: "Medusa",
         items: [
           {
+            id: 0,
             name: "Diff",
-            winDiff: 0.8,
+            winRateDiff: 0.8,
             useRate: 0.9,
           },
           {
+            id: 1,
             name: "BKB",
-            winDiff: -0.1,
+            winRateDiff: -0.1,
             useRate: 0.7,
           },
         ],
       },
       {
+        id: 1,
         name: "Ursa",
         items: [
           {
+            id: 0,
             name: "Diff",
-            winDiff: 0.3,
+            winRateDiff: 0.3,
             useRate: 0.1,
           },
           {
+            id: 1,
             name: "BKB",
-            winDiff: -0.3,
+            winRateDiff: -0.3,
             useRate: 0.7,
           },
         ],
@@ -113,7 +119,7 @@ function XAxis(props) {
           y = props.padding.y;
         return (
           <text
-            key={item.name}
+            key={item.id}
             x={x + props.textPadding}
             y={y + 2}
             textAnchor="start"
@@ -131,18 +137,18 @@ function XAxis(props) {
 function YAxis(props) {
   return (
     <g>
-      {props.data.map((item, index) => {
+      {props.data.map((hero, index) => {
         const x = props.padding.x,
           y = props.scale.y(index + 0.5);
         return (
           <text
-            key={item.name}
+            key={hero.id}
             x={x - props.textPadding}
             y={y + 2}
             textAnchor="end"
             dominantBaseline="middle"
           >
-            {item.name}
+            {hero.name}
           </text>
         );
       })}
@@ -155,19 +161,19 @@ function Content(props) {
     <g>
       {props.data.map((hero, heroIndex) => {
         return (
-          <g key={heroIndex}>
+          <g key={hero.id}>
             {hero.items.map((item, itemIndex) => {
               return (
                 <rect
-                  key={itemIndex}
+                  key={item.id}
                   x={props.scale.x(itemIndex)}
                   y={props.scale.y(heroIndex)}
                   width={props.itemSize}
                   height={props.itemSize}
-                  fill={props.scale.color(item.winDiff)}
+                  fill={props.scale.color(item.winRateDiff)}
                 >
                   <title>
-                    {hero.name} * {item.name} ({item.winDiff})
+                    {hero.name} * {item.name} ({item.winRateDiff})
                   </title>
                 </rect>
               );
