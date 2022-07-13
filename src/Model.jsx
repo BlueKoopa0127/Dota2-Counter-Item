@@ -144,6 +144,28 @@ export function getHeros(setHeros) {
     "match_patch",
   ];
 
+  function convertSet(json) {
+    const heros = Array.from(new Set(json.rows.map(({ hero }) => hero)));
+    const test = heros.map((hero) => {
+      return {
+        id: json.rows.find((element) => element.hero === hero).id,
+        name: hero,
+        items: json.rows
+          .filter((element) => element.hero === hero)
+          .map((element) => {
+            return {
+              id: element.item_id,
+              name: element.item,
+              winRateDiff: element.win_rate_diff,
+              useRate: element.use_rate,
+            };
+          }),
+      };
+    });
+    console.log(test);
+    setData(test);
+  }
+
   useEffect(() => {
     fetchDataJson(
       `${sql}
@@ -153,37 +175,14 @@ export function getHeros(setHeros) {
       where ${tables[3]}.localized_name not like 'Recipe:%25'
       order by id asc
       ;`,
-      convert,
-      setHeros
+      convertSet
     );
   }, []);
 }
 
-function convert(json, setData) {
-  const heros = Array.from(new Set(json.rows.map(({ hero }) => hero)));
-  const test = heros.map((hero) => {
-    return {
-      id: json.rows.find((element) => element.hero === hero).id,
-      name: hero,
-      items: json.rows
-        .filter((element) => element.hero === hero)
-        .map((element) => {
-          return {
-            id: element.item_id,
-            name: element.item,
-            winRateDiff: element.win_rate_diff,
-            useRate: element.use_rate,
-          };
-        }),
-    };
-  });
-  console.log(test);
-  setData(test);
-}
-
-async function fetchDataJson(url, convert, setData) {
+async function fetchDataJson(url, setData) {
   const response = await fetch(url);
   const json = await response.json();
   console.log(json);
-  convert(json, setData);
+  setData(json);
 }
