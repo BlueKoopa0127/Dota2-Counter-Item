@@ -157,6 +157,7 @@ function YAxis(props) {
 }
 
 function Content(props) {
+  const space = 0.5;
   return (
     <g>
       {props.data.map((hero, heroIndex) => {
@@ -166,10 +167,10 @@ function Content(props) {
               return (
                 <rect
                   key={item.id}
-                  x={props.scale.x(itemIndex)}
-                  y={props.scale.y(heroIndex)}
-                  width={props.itemSize}
-                  height={props.itemSize}
+                  x={props.scale.x(itemIndex) + space}
+                  y={props.scale.y(heroIndex) + space}
+                  width={props.itemSize - space * 2}
+                  height={props.itemSize - space * 2}
                   fill={props.scale.color(item.winRateDiff)}
                 >
                   <title>
