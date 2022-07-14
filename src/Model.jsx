@@ -19,8 +19,8 @@ export function ModelTest() {
   const [datas, setDatas] = useState(null);
 
   const hero_id = 1;
-  const match_id = 6660010209;
-  const hero_items_sql = `
+  const match_id = 6661221608;
+  const hero_items_table = `
     (
       select
         ${tables[1]}.match_id,
@@ -40,35 +40,32 @@ export function ModelTest() {
       order by ${tables[1]}.match_id desc limit 20
   ) as hero_items
   `;
+  const match_items_table = `
+  (
+    select match_id, win, array_agg(item) as item_list
+    from(
+      select
+        match_id,
+        win,
+        unnest(items) as item 
+      from ${hero_items_table}
+    ) as item_table
+    group by match_id, win
+  ) as match_items`;
 
   useEffect(() => {
     fetchDataJson(
       `${sql}
       select 
-        match_id,
-        hero_id,
-        items,
-        win,
-        case
-          when win
-            then Array[1] || Array[11]
-          when win
-            then Array[0] || Array[00]
-          else null
-        end as enemy_items
-      from ${hero_items_sql}
-      where win=true
-      ;`,
-      setDatas
-    );
-  }, []);
-
-  useEffect(() => {
-    fetchDataJson(
-      `${sql} 
-      select match_id, win, array_agg(item) as item_list
-      from( select match_id, win, unnest(items) as item from ${hero_items_sql}) as item_table
-      group by match_id, win
+        hero_items.match_id,
+        hero_items.hero_id,
+        hero_items.win,
+        match_items.item_list as enemy_items
+      from ${hero_items_table}
+        left outer join ${match_items_table}
+          on hero_items.match_id=match_items.match_id 
+            and hero_items.win=not match_items.win
+      
       ;`,
       setDatas
     );
@@ -77,13 +74,11 @@ export function ModelTest() {
   /*useEffect(() => {
     fetchDataJson(
       `${sql}
-      select * from ${tables[0]} where match_id=${match_id}
+      select * from ${hero_items_table} where match_id=${match_id} and win=true
       ;`,
       setDatas
     );
   }, []);
-
-  
 
   /*useEffect(() => {
     fetchDataJson(
