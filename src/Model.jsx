@@ -33,11 +33,11 @@ export function ModelTest() {
             then not radiant_win
           else null
         end as win
-      from ${tables[1]} 
+      from ${tables[1]}
         inner join ${tables[7]} on ${tables[1]}.match_id=${tables[7]}.match_id
         right outer join ${tables[0]} on ${tables[1]}.match_id=${tables[0]}.match_id
       where patch='7.31'
-      order by ${tables[1]}.match_id desc limit 20000
+      order by ${tables[1]}.match_id desc limit 80000
   ) as hero_items
   `;
   const match_items_table = `
@@ -53,7 +53,7 @@ export function ModelTest() {
     where item!=0
     group by match_id, win
   ) as match_items`;
-  const hero_enemy_items = `
+  const hero_enemyitems = `
   (
     select
       hero_items.hero_id,
@@ -63,13 +63,48 @@ export function ModelTest() {
       left outer join ${match_items_table}
         on hero_items.match_id=match_items.match_id 
           and hero_items.win=not match_items.win
-  ) as hero_enemy_items
+  ) as hero_enemyitems
   `;
+  const hero_enemyitem_win_lose = `
+  (
+    select 
+      hero_id,
+      enemy_item,
+      count(win=true or null) as win,
+      count(win=false or null) as lose
+    from 
+      (select hero_id, win, unnest(enemy_items) as enemy_item from ${hero_enemyitems}) as hero_enemyitems
+    group by hero_id, enemy_item
+  ) as hero_enemyitem_win_lose`;
+  const localized_name_table = `
+  (
+    select
+      ${tables[2]}.id as hero_id,
+      ${tables[3]}.id as item_id,
+      ${tables[2]}.localized_name as hero,
+      ${tables[3]}.localized_name as enemy_item,
+      win,
+      lose
+    from ${hero_enemyitem_win_lose}
+      left outer join ${tables[2]} on hero_enemyitem_win_lose.hero_id = ${tables[2]}.id
+      left outer join ${tables[3]} on hero_enemyitem_win_lose.enemy_item = ${tables[3]}.id
+  ) as localized_name_table`;
 
   useEffect(() => {
     fetchDataJson(
       `${sql}
-      select hero_id, enemy_item, count(win=true or null) as win, count(win=false or null) as lose from(select hero_id, win, unnest(enemy_items) as enemy_item from ${hero_enemy_items}) as a group by hero_id, enemy_item
+      select * 
+      from ${localized_name_table}
+      order by hero_id, item_id
+      ;`,
+      setDatas
+    );
+  }, []);
+
+  /*useEffect(() => {
+    fetchDataJson(
+      `${sql}
+      select * from ${hero_items_table}
       ;`,
       setDatas
     );
@@ -78,16 +113,7 @@ export function ModelTest() {
   useEffect(() => {
     fetchDataJson(
       `${sql}
-      select * from ${tables[2]} where id=8
-      ;`,
-      setDatas
-    );
-  }, []);
-
-  useEffect(() => {
-    fetchDataJson(
-      `${sql}
-      select * from ${tables[3]} where id=108
+      select * from ${tables[2]} where id=48
       ;`,
       setDatas
     );
