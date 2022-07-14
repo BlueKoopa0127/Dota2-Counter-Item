@@ -20,29 +20,61 @@ export function ModelTest() {
 
   const hero_id = 1;
   const match_id = 6660010209;
+  const hero_items_sql = `
+    (
+      select
+        ${tables[1]}.match_id,
+        hero_id,
+        ARRAY[item_0, item_1, item_2, item_3, item_4, item_5, item_neutral] as items,
+        case
+          when player_slot in(0,1,2,3,4)
+            then radiant_win
+          when player_slot in(128,129,130,131,132)
+            then not radiant_win
+          else null
+        end as win
+      from ${tables[1]} 
+        inner join ${tables[7]} on ${tables[1]}.match_id=${tables[7]}.match_id
+        right outer join ${tables[0]} on ${tables[1]}.match_id=${tables[0]}.match_id
+      where patch='7.31'
+      order by ${tables[1]}.match_id desc limit 20
+  ) as hero_items
+  `;
 
   useEffect(() => {
     fetchDataJson(
       `${sql}
-      select ${tables[1]}.match_id, hero_id, item_0, item_1, item_2, item_3, item_4, item_5, item_neutral,
-      case
-        when player_slot in(0,1,2,3,4)
-          then radiant_win
-        when player_slot in(128,129,130,131,132)
-          then not radiant_win
-        else null
-      end as win
-      from ${tables[1]} 
-      inner join ${tables[7]} on ${tables[1]}.match_id=${tables[7]}.match_id
-      right outer join ${tables[0]} on ${tables[1]}.match_id=${tables[0]}.match_id
-      where patch='7.31'
-      order by ${tables[1]}.match_id desc limit 80000 
+      select 
+        match_id,
+        hero_id,
+        items,
+        win,
+        case
+          when win
+            then Array[1] || Array[11]
+          when win
+            then Array[0] || Array[00]
+          else null
+        end as enemy_items
+      from ${hero_items_sql}
+      where win=true
       ;`,
       setDatas
     );
   }, []);
 
   useEffect(() => {
+    fetchDataJson(
+      `${sql} 
+      select match_id, win, array_agg(item) as item_list
+      from( select match_id, win, unnest(items) as item from ${hero_items_sql}) as item_table
+      group by match_id, win
+      ;`,
+      setDatas
+    );
+  }, []);
+
+  /*useEffect(() => {
     fetchDataJson(
       `${sql}
       select * from ${tables[0]} where match_id=${match_id}
@@ -51,14 +83,7 @@ export function ModelTest() {
     );
   }, []);
 
-  useEffect(() => {
-    fetchDataJson(
-      `${sql}
-      select * from ${tables[2]} where id=${64}
-      ;`,
-      setDatas
-    );
-  }, []);
+  
 
   /*useEffect(() => {
     fetchDataJson(
@@ -180,9 +205,15 @@ export function getHeros(setHeros) {
   useEffect(() => {
     fetchDataJson(
       `${sql}
-      select ${tables[2]}.id as id, ${tables[3]}.id as item_id, ${tables[2]}.localized_name as hero, ${tables[3]}.localized_name as item, 0.3 as win_rate_diff, 0 as use_rate
+      select 
+        ${tables[2]}.id as id,
+        ${tables[3]}.id as item_id,
+        ${tables[2]}.localized_name as hero,
+        ${tables[3]}.localized_name as item,
+        0.3 as win_rate_diff,
+        0 as use_rate
       from ${tables[2]}
-      right outer join ${tables[3]} on true
+        right outer join ${tables[3]} on true
       where ${tables[3]}.localized_name not like 'Recipe:%25'
       order by id asc
       ;`,
