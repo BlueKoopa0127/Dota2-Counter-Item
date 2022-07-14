@@ -37,7 +37,7 @@ export function ModelTest() {
         inner join ${tables[7]} on ${tables[1]}.match_id=${tables[7]}.match_id
         right outer join ${tables[0]} on ${tables[1]}.match_id=${tables[0]}.match_id
       where patch='7.31'
-      order by ${tables[1]}.match_id desc limit 20
+      order by ${tables[1]}.match_id desc limit 20000
   ) as hero_items
   `;
   const match_items_table = `
@@ -52,20 +52,23 @@ export function ModelTest() {
     ) as item_table
     group by match_id, win
   ) as match_items`;
+  const hero_enemy_items = `
+  (
+    select
+      hero_items.hero_id,
+      hero_items.win,
+      match_items.item_list as enemy_items
+    from ${hero_items_table}
+      left outer join ${match_items_table}
+        on hero_items.match_id=match_items.match_id 
+          and hero_items.win=not match_items.win
+  ) as hero_enemy_items
+  `;
 
   useEffect(() => {
     fetchDataJson(
       `${sql}
-      select 
-        hero_items.match_id,
-        hero_items.hero_id,
-        hero_items.win,
-        match_items.item_list as enemy_items
-      from ${hero_items_table}
-        left outer join ${match_items_table}
-          on hero_items.match_id=match_items.match_id 
-            and hero_items.win=not match_items.win
-      
+      select hero_id, win, unnest(enemy_items) as enemy_item from ${hero_enemy_items} where hero_id=1
       ;`,
       setDatas
     );
