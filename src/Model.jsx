@@ -44,12 +44,13 @@ export function ModelTest() {
   (
     select match_id, win, array_agg(item) as item_list
     from(
-      select
+      select distinct
         match_id,
         win,
         unnest(items) as item 
       from ${hero_items_table}
     ) as item_table
+    where item!=0
     group by match_id, win
   ) as match_items`;
   const hero_enemy_items = `
@@ -68,16 +69,25 @@ export function ModelTest() {
   useEffect(() => {
     fetchDataJson(
       `${sql}
-      select hero_id, win, unnest(enemy_items) as enemy_item from ${hero_enemy_items} where hero_id=1
+      select hero_id, enemy_item, count(win=true or null) as win, count(win=false or null) as lose from(select hero_id, win, unnest(enemy_items) as enemy_item from ${hero_enemy_items}) as a group by hero_id, enemy_item
       ;`,
       setDatas
     );
   }, []);
 
-  /*useEffect(() => {
+  useEffect(() => {
     fetchDataJson(
       `${sql}
-      select * from ${hero_items_table} where match_id=${match_id} and win=true
+      select * from ${tables[2]} where id=8
+      ;`,
+      setDatas
+    );
+  }, []);
+
+  useEffect(() => {
+    fetchDataJson(
+      `${sql}
+      select * from ${tables[3]} where id=108
       ;`,
       setDatas
     );
