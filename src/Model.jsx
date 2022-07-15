@@ -20,7 +20,47 @@ export function ModelTest() {
 
   const hero_id = 1;
   const match_id = 6661221608;
-  const match_count = 6000;
+  const match_count = 10000;
+  const use_item_list = `
+  (
+    1, 36, 37, 40, 43, 48, 50, 63, 65, 67, 69, 73, 75, 77, 79, 81, 86, 88, 90, 92, 94, 96, 98, 100, 
+    102, 104, 108, 110, 112, 114, 116, 119, 121, 123, 125, 127, 129, 131, 133, 135, 137, 139, 141, 143, 145,
+    147, 149, 151, 152, 154, 156, 158, 160, 162, 164, 166, 168, 170, 172, 174, 176, 178, 180, 185, 187, 190,
+    196, 201, 202, 203, 204, 206, 208, 210, 214, 218, 220, 223, 225, 226, 229, 231, 232, 235, 236, 242, 244, 
+    247, 249, 250, 252, 254, 256, 259, 263, 265, 267, 269, 273, 277, 287, 288, 289, 290, 291, 292, 294, 300, 
+    301, 306, 309, 311, 326, 331, 335, 336, 349, 354, 355, 356, 357, 358, 359, 361, 362, 366, 370, 371, 372, 
+    374, 376, 379, 381, 534, 565, 569, 571, 573, 574, 577, 585, 589, 596, 598, 600, 603, 604, 610, 635, 638, 
+    675, 676, 677, 678, 680, 686, 692, 825, 828, 829, 834, 835, 837, 838, 840, 908, 911, 931, 964, 1466
+  )
+  `;
+
+  const match_731 = `
+  (
+    select
+      match_id
+    from ${tables[7]}
+    where patch='7.31'
+    order by match_id desc
+    limit ${match_count}
+  ) as match_731`;
+
+  const a = `(
+    select
+      match_731.match_id,
+      hero_id,
+      ARRAY[item_0, item_1, item_2, item_3, item_4, item_5, item_neutral] as items,
+      case
+        when player_slot in(0,1,2,3,4)
+          then radiant_win
+        when player_slot in(128,129,130,131,132)
+          then not radiant_win
+        else null
+      end as win
+    from ${match_731}
+      inner join ${tables[1]} on match_731.match_id = ${tables[1]}.match_id
+      right outer join ${tables[0]} on match_731.match_id=${tables[0]}.match_id
+  ) as hero_items_table`;
+
   const hero_items_table = `
     (
       select
@@ -34,7 +74,9 @@ export function ModelTest() {
             then not radiant_win
           else null
         end as win
-      from ${tables[1]}
+      from (select * from ${
+        tables[1]
+      } order by match_id desc limit ${match_count}) as ${tables[1]}
         inner join ${tables[7]} on ${tables[1]}.match_id=${tables[7]}.match_id
         right outer join ${tables[0]} on ${tables[1]}.match_id=${
     tables[0]
@@ -101,7 +143,7 @@ export function ModelTest() {
     order by hero_id
   ) as hero_win_lose`;
 
-  useEffect(() => {
+  /*useEffect(() => {
     fetchDataJson(
       `${sql}
       select
@@ -122,12 +164,30 @@ export function ModelTest() {
       ;`,
       setDatas
     );
+  }, []);*/
+
+  useEffect(() => {
+    fetchDataJson(
+      `${sql}
+      explain analyze select match_id from ${a} 
+      ;`,
+      setDatas
+    );
+  }, []);
+
+  useEffect(() => {
+    fetchDataJson(
+      `${sql}
+      explain analyze select match_id from ${hero_items_table} 
+      ;`,
+      setDatas
+    );
   }, []);
 
   /*useEffect(() => {
     fetchDataJson(
       `${sql}
-      select * from ${tables[3]} where id = 1466
+      explain analyze select id from ${tables[3]} where id in (1) order by id desc 
       ;`,
       setDatas
     );
@@ -268,7 +328,20 @@ export function getHeros(setHeros) {
     setHeros(test);
   }
 
-  const match_count = 1000;
+  const match_count = 3000;
+  const use_item_list = `
+  (
+    1, 36, 37, 40, 43, 48, 50, 63, 65, 67, 69, 73, 75, 77, 79, 81, 86, 88, 90, 92, 94, 96, 98, 100, 
+    102, 104, 108, 110, 112, 114, 116, 119, 121, 123, 125, 127, 129, 131, 133, 135, 137, 139, 141, 143, 145,
+    147, 149, 151, 152, 154, 156, 158, 160, 162, 164, 166, 168, 170, 172, 174, 176, 178, 180, 185, 187, 190,
+    196, 201, 202, 203, 204, 206, 208, 210, 214, 218, 220, 223, 225, 226, 229, 231, 232, 235, 236, 242, 244, 
+    247, 249, 250, 252, 254, 256, 259, 263, 265, 267, 269, 273, 277, 287, 288, 289, 290, 291, 292, 294, 300, 
+    301, 306, 309, 311, 326, 331, 335, 336, 349, 354, 355, 356, 357, 358, 359, 361, 362, 366, 370, 371, 372, 
+    374, 376, 379, 381, 534, 565, 569, 571, 573, 574, 577, 585, 589, 596, 598, 600, 603, 604, 610, 635, 638, 
+    675, 676, 677, 678, 680, 686, 692, 825, 828, 829, 834, 835, 837, 838, 840, 908, 911, 931, 964, 1466
+  )
+  `;
+
   const hero_items_table = `
     (
       select
@@ -282,13 +355,11 @@ export function getHeros(setHeros) {
             then not radiant_win
           else null
         end as win
-      from ${tables[1]}
+      from (select * from ${tables[1]} order by match_id desc limit ${match_count}) as ${tables[1]}
         inner join ${tables[7]} on ${tables[1]}.match_id=${tables[7]}.match_id
-        right outer join ${tables[0]} on ${tables[1]}.match_id=${
-    tables[0]
-  }.match_id
+        right outer join ${tables[0]} on ${tables[1]}.match_id=${tables[0]}.match_id
       where patch='7.31'
-      order by ${tables[1]}.match_id desc limit ${match_count * 10}
+      order by ${tables[1]}.match_id desc
   ) as hero_items`;
   const match_items_table = `
   (
@@ -323,6 +394,7 @@ export function getHeros(setHeros) {
       count(win=false or null) as lose
     from 
       (select hero_id, win, unnest(enemy_items) as enemy_item from ${hero_enemyitems}) as hero_enemyitems
+    where enemy_item in ${use_item_list}
     group by hero_id, enemy_item
   ) as hero_enemyitem_win_lose`;
   const hero_win_lose = `
@@ -354,7 +426,7 @@ export function getHeros(setHeros) {
   useEffect(() => {
     fetchDataJson(
       `${sql}
-      select 
+      Explain Analyze select 
         ${tables[2]}.id as id,
         ${tables[3]}.id as item_id,
         ${tables[2]}.localized_name as hero,
@@ -366,7 +438,7 @@ export function getHeros(setHeros) {
         left outer join ${hero_item_windiff}
           on hero_item_windiff.hero_id = ${tables[2]}.id
           and hero_item_windiff.enemy_item = ${tables[3]}.id
-      where ${tables[3]}.localized_name not like 'Recipe:%25'
+      where ${tables[3]}.id in ${use_item_list}
       order by id asc
       ;`,
       convertSet
