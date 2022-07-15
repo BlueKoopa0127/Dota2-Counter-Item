@@ -20,6 +20,7 @@ export function ModelTest() {
 
   const hero_id = 1;
   const match_id = 6661221608;
+  const match_count = 6000;
   const hero_items_table = `
     (
       select
@@ -35,11 +36,12 @@ export function ModelTest() {
         end as win
       from ${tables[1]}
         inner join ${tables[7]} on ${tables[1]}.match_id=${tables[7]}.match_id
-        right outer join ${tables[0]} on ${tables[1]}.match_id=${tables[0]}.match_id
+        right outer join ${tables[0]} on ${tables[1]}.match_id=${
+    tables[0]
+  }.match_id
       where patch='7.31'
-      order by ${tables[1]}.match_id desc limit 80000
-  ) as hero_items
-  `;
+      order by ${tables[1]}.match_id desc limit ${match_count * 10}
+  ) as hero_items`;
   const match_items_table = `
   (
     select match_id, win, array_agg(item) as item_list
@@ -63,8 +65,7 @@ export function ModelTest() {
       left outer join ${match_items_table}
         on hero_items.match_id=match_items.match_id 
           and hero_items.win=not match_items.win
-  ) as hero_enemyitems
-  `;
+  ) as hero_enemyitems`;
   const hero_enemyitem_win_lose = `
   (
     select 
@@ -89,13 +90,44 @@ export function ModelTest() {
       left outer join ${tables[2]} on hero_enemyitem_win_lose.hero_id = ${tables[2]}.id
       left outer join ${tables[3]} on hero_enemyitem_win_lose.enemy_item = ${tables[3]}.id
   ) as localized_name_table`;
+  const hero_win_lose = `
+  (
+    select
+      hero_id,
+      count(win=true or null) as hero_win,
+      count(win=false or null) as hero_lose 
+    from ${hero_items_table}
+    group by hero_id
+    order by hero_id
+  ) as hero_win_lose`;
 
   useEffect(() => {
     fetchDataJson(
       `${sql}
-      select * 
+      select
+        localized_name_table.hero_id,
+        item_id,
+        hero,
+        enemy_item,
+        ( (1.0 * lose / (win %2B lose)) - (1.0 * hero_lose / (hero_win %2B hero_lose)) ) as win_rate_diff,
+        ( 1.0 * (win %2B lose) / (hero_win %2B hero_lose) ) as use_rate,
+        win,
+        lose,
+        hero_win,
+        hero_lose
       from ${localized_name_table}
-      order by hero_id, item_id
+        left outer join ${hero_win_lose}
+          on localized_name_table.hero_id=hero_win_lose.hero_id
+      order by localized_name_table.hero_id, item_id
+      ;`,
+      setDatas
+    );
+  }, []);
+
+  /*useEffect(() => {
+    fetchDataJson(
+      `${sql}
+      select * from ${tables[3]} where id = 1466
       ;`,
       setDatas
     );
@@ -233,8 +265,91 @@ export function getHeros(setHeros) {
       };
     });
     console.log(test);
-    setData(test);
+    setHeros(test);
   }
+
+  const match_count = 1000;
+  const hero_items_table = `
+    (
+      select
+        ${tables[1]}.match_id,
+        hero_id,
+        ARRAY[item_0, item_1, item_2, item_3, item_4, item_5, item_neutral] as items,
+        case
+          when player_slot in(0,1,2,3,4)
+            then radiant_win
+          when player_slot in(128,129,130,131,132)
+            then not radiant_win
+          else null
+        end as win
+      from ${tables[1]}
+        inner join ${tables[7]} on ${tables[1]}.match_id=${tables[7]}.match_id
+        right outer join ${tables[0]} on ${tables[1]}.match_id=${
+    tables[0]
+  }.match_id
+      where patch='7.31'
+      order by ${tables[1]}.match_id desc limit ${match_count * 10}
+  ) as hero_items`;
+  const match_items_table = `
+  (
+    select match_id, win, array_agg(item) as item_list
+    from(
+      select distinct
+        match_id,
+        win,
+        unnest(items) as item 
+      from ${hero_items_table}
+    ) as item_table
+    where item!=0
+    group by match_id, win
+  ) as match_items`;
+  const hero_enemyitems = `
+  (
+    select
+      hero_items.hero_id,
+      hero_items.win,
+      match_items.item_list as enemy_items
+    from ${hero_items_table}
+      left outer join ${match_items_table}
+        on hero_items.match_id=match_items.match_id 
+          and hero_items.win=not match_items.win
+  ) as hero_enemyitems`;
+  const hero_enemyitem_win_lose = `
+  (
+    select 
+      hero_id,
+      enemy_item,
+      count(win=true or null) as win,
+      count(win=false or null) as lose
+    from 
+      (select hero_id, win, unnest(enemy_items) as enemy_item from ${hero_enemyitems}) as hero_enemyitems
+    group by hero_id, enemy_item
+  ) as hero_enemyitem_win_lose`;
+  const hero_win_lose = `
+  (
+    select
+      hero_id,
+      count(win=true or null) as hero_win,
+      count(win=false or null) as hero_lose 
+    from ${hero_items_table}
+    group by hero_id
+    order by hero_id
+  ) as hero_win_lose`;
+  const hero_item_windiff = `(
+    select
+      hero_enemyitem_win_lose.hero_id,
+      hero_enemyitem_win_lose.enemy_item,
+      ( (1.0 * lose / (win %2B lose)) - (1.0 * hero_lose / (hero_win %2B hero_lose)) ) as win_rate_diff,
+      ( 1.0 * (win %2B lose) / (hero_win %2B hero_lose) ) as use_rate,
+      win,
+      lose,
+      hero_win,
+      hero_lose
+    from ${hero_enemyitem_win_lose}
+      left outer join ${hero_win_lose}
+        on hero_enemyitem_win_lose.hero_id=hero_win_lose.hero_id
+    order by hero_enemyitem_win_lose.hero_id, hero_enemyitem_win_lose.enemy_item
+  ) as hero_item_windiff`;
 
   useEffect(() => {
     fetchDataJson(
@@ -244,10 +359,13 @@ export function getHeros(setHeros) {
         ${tables[3]}.id as item_id,
         ${tables[2]}.localized_name as hero,
         ${tables[3]}.localized_name as item,
-        0.3 as win_rate_diff,
-        0 as use_rate
+        coalesce(win_rate_diff, 0) as win_rate_diff,
+        coalesce(use_rate, 0) as use_rate
       from ${tables[2]}
         right outer join ${tables[3]} on true
+        left outer join ${hero_item_windiff}
+          on hero_item_windiff.hero_id = ${tables[2]}.id
+          and hero_item_windiff.enemy_item = ${tables[3]}.id
       where ${tables[3]}.localized_name not like 'Recipe:%25'
       order by id asc
       ;`,
