@@ -20,7 +20,7 @@ export function ModelTest() {
 
   const hero_id = 1;
   const match_id = 6661221608;
-  const match_count = 10000;
+  const match_count = 10224;
   const use_item_list = `
   (
     1, 36, 37, 40, 43, 48, 50, 63, 65, 67, 69, 73, 75, 77, 79, 81, 86, 88, 90, 92, 94, 96, 98, 100, 
@@ -44,11 +44,32 @@ export function ModelTest() {
     limit ${match_count}
   ) as match_731`;
 
-  const a = `(
+  const match_radiant_win = `
+  (
     select
       match_731.match_id,
+      radiant_win
+    from ${match_731}
+      inner join 
+        (select match_id, radiant_win from ${tables[1]} order by match_id desc) as match_win
+        on match_731.match_id = match_win.match_id
+  ) as match_radiant_win`;
+
+  const match_hero_items = `
+  (
+    select
+      match_id,
+      player_slot,
       hero_id,
-      ARRAY[item_0, item_1, item_2, item_3, item_4, item_5, item_neutral] as items,
+      ARRAY[item_0, item_1, item_2, item_3, item_4, item_5, item_neutral] as items
+    from ${tables[0]}
+  ) as match_hero_items`;
+
+  const hero_items_table = `(
+    select
+      match_radiant_win.match_id,
+      hero_id,
+      items,
       case
         when player_slot in(0,1,2,3,4)
           then radiant_win
@@ -56,45 +77,28 @@ export function ModelTest() {
           then not radiant_win
         else null
       end as win
-    from ${match_731}
-      inner join ${tables[1]} on match_731.match_id = ${tables[1]}.match_id
-      right outer join ${tables[0]} on match_731.match_id=${tables[0]}.match_id
-  ) as hero_items_table`;
-
-  const hero_items_table = `
-    (
-      select
-        ${tables[1]}.match_id,
-        hero_id,
-        ARRAY[item_0, item_1, item_2, item_3, item_4, item_5, item_neutral] as items,
-        case
-          when player_slot in(0,1,2,3,4)
-            then radiant_win
-          when player_slot in(128,129,130,131,132)
-            then not radiant_win
-          else null
-        end as win
-      from (select * from ${
-        tables[1]
-      } order by match_id desc limit ${match_count}) as ${tables[1]}
-        inner join ${tables[7]} on ${tables[1]}.match_id=${tables[7]}.match_id
-        right outer join ${tables[0]} on ${tables[1]}.match_id=${
-    tables[0]
-  }.match_id
-      where patch='7.31'
-      order by ${tables[1]}.match_id desc limit ${match_count * 10}
+    from 
+      ${match_radiant_win}
+        inner join ${match_hero_items} on match_radiant_win.match_id = match_hero_items.match_id
   ) as hero_items`;
+
+  const match_win_item = `
+  (
+    select distinct
+      match_id,
+      win,
+      unnest(items) as item 
+    from ${hero_items_table}
+  ) as item_table`;
+
   const match_items_table = `
   (
-    select match_id, win, array_agg(item) as item_list
-    from(
-      select distinct
-        match_id,
+    select
+      match_id,
         win,
-        unnest(items) as item 
-      from ${hero_items_table}
-    ) as item_table
-    where item!=0
+        array_agg(item) as item_list
+    from ${match_win_item}
+    where item in ${use_item_list}
     group by match_id, win
   ) as match_items`;
   const hero_enemyitems = `
@@ -119,19 +123,6 @@ export function ModelTest() {
       (select hero_id, win, unnest(enemy_items) as enemy_item from ${hero_enemyitems}) as hero_enemyitems
     group by hero_id, enemy_item
   ) as hero_enemyitem_win_lose`;
-  const localized_name_table = `
-  (
-    select
-      ${tables[2]}.id as hero_id,
-      ${tables[3]}.id as item_id,
-      ${tables[2]}.localized_name as hero,
-      ${tables[3]}.localized_name as enemy_item,
-      win,
-      lose
-    from ${hero_enemyitem_win_lose}
-      left outer join ${tables[2]} on hero_enemyitem_win_lose.hero_id = ${tables[2]}.id
-      left outer join ${tables[3]} on hero_enemyitem_win_lose.enemy_item = ${tables[3]}.id
-  ) as localized_name_table`;
   const hero_win_lose = `
   (
     select
@@ -143,151 +134,59 @@ export function ModelTest() {
     order by hero_id
   ) as hero_win_lose`;
 
-  /*useEffect(() => {
-    fetchDataJson(
-      `${sql}
-      select
-        localized_name_table.hero_id,
-        item_id,
-        hero,
-        enemy_item,
-        ( (1.0 * lose / (win %2B lose)) - (1.0 * hero_lose / (hero_win %2B hero_lose)) ) as win_rate_diff,
-        ( 1.0 * (win %2B lose) / (hero_win %2B hero_lose) ) as use_rate,
-        win,
-        lose,
-        hero_win,
-        hero_lose
-      from ${localized_name_table}
-        left outer join ${hero_win_lose}
-          on localized_name_table.hero_id=hero_win_lose.hero_id
-      order by localized_name_table.hero_id, item_id
-      ;`,
-      setDatas
-    );
-  }, []);*/
+  const hero_item_windiff = `(
+    select
+      hero_enemyitem_win_lose.hero_id,
+      hero_enemyitem_win_lose.enemy_item,
+      ( (1.0 * lose / (win %2B lose)) - (1.0 * hero_lose / (hero_win %2B hero_lose)) ) as win_rate_diff,
+      ( 1.0 * (win %2B lose) / (hero_win %2B hero_lose) ) as use_rate,
+      win,
+      lose,
+      hero_win,
+      hero_lose
+    from ${hero_enemyitem_win_lose}
+      left outer join ${hero_win_lose}
+        on hero_enemyitem_win_lose.hero_id=hero_win_lose.hero_id
+    order by hero_enemyitem_win_lose.hero_id, hero_enemyitem_win_lose.enemy_item
+  ) as hero_item_windiff`;
+
+  const use_item_table = `
+  (
+    select id, localized_name 
+    from ${tables[3]}
+    where id in ${use_item_list}
+    order by id
+  ) as use_item_table`;
+
+  const hero_item_list = `
+  (
+    select
+    ${tables[2]}.id as hero_id,
+    use_item_table.id as item_id,
+    ${tables[2]}.localized_name as hero,
+    use_item_table.localized_name as item
+    from ${tables[2]} cross join ${use_item_table}
+  ) as hero_item_list`;
 
   useEffect(() => {
     fetchDataJson(
       `${sql}
-      explain analyze select match_id from ${a} 
+      select 
+        hero_item_list.hero_id,
+        hero_item_list.item_id,
+        hero_item_list.hero,
+        hero_item_list.item,
+        coalesce(win_rate_diff, 0) as win_rate_diff,
+        coalesce(use_rate, 0) as use_rate
+      from ${hero_item_list}
+        left outer join ${hero_item_windiff}
+          on hero_item_windiff.hero_id = hero_item_list.hero_id
+          and hero_item_windiff.enemy_item = hero_item_list.item_id
+      order by hero_id asc
       ;`,
       setDatas
     );
   }, []);
-
-  useEffect(() => {
-    fetchDataJson(
-      `${sql}
-      explain analyze select match_id from ${hero_items_table} 
-      ;`,
-      setDatas
-    );
-  }, []);
-
-  /*useEffect(() => {
-    fetchDataJson(
-      `${sql}
-      explain analyze select id from ${tables[3]} where id in (1) order by id desc 
-      ;`,
-      setDatas
-    );
-  }, []);
-
-  /*useEffect(() => {
-    fetchDataJson(
-      `${sql}
-      select * from ${hero_items_table}
-      ;`,
-      setDatas
-    );
-  }, []);
-
-  useEffect(() => {
-    fetchDataJson(
-      `${sql}
-      select * from ${tables[2]} where id=48
-      ;`,
-      setDatas
-    );
-  }, []);
-
-  /*useEffect(() => {
-    fetchDataJson(
-      `${sql}
-      select ${tables[0]}.match_id,player_slot,radiant_win,${tables[2]}.localized_name,
-      (select localized_name from ${tables[3]} where id=item_0) as item_0,
-      (select localized_name from ${tables[3]} where id=item_1) as item_1,
-      (select localized_name from ${tables[3]} where id=item_2) as item_2,
-      (select localized_name from ${tables[3]} where id=item_3) as item_3,
-      (select localized_name from ${tables[3]} where id=item_4) as item_4,
-      (select localized_name from ${tables[3]} where id=item_5) as item_5,
-      (select localized_name from ${tables[3]} where id=item_neutral) as item_neutral
-      from ${tables[0]}
-      right outer join (select match_id from ${tables[0]} where hero_id=${hero_id} order by ${tables[0]}.match_id desc limit 100) as hero_matches
-      on ${tables[0]}.match_id = hero_matches.match_id
-      inner join ${tables[1]} on ${tables[0]}.match_id = ${tables[1]}.match_id 
-      inner join ${tables[2]} on ${tables[0]}.hero_id = ${tables[2]}.id
-      ;`,
-      setDatas
-    );
-  }, []);
-
-  useEffect(() => {
-    fetchDataJson(
-      `${sql}
-      select *
-      from(
-        select
-        match_id,
-        case
-          when player_slot in(0,1,2,3,4)
-            then true
-          when player_slot in(128,129,130,131,132)
-            then false
-          else null
-        end as is_radiant,
-        hero_id
-        from ${tables[0]}
-      ) as t where match_id=${match_id} and 
-      case
-        when (select count(hero_id=${hero_id} or null) from ${tables[0]} where match_id=${match_id} and player_slot in(0,1,2,3,4)) = 1
-          then is_radiant=false
-        when (select count(hero_id=${hero_id} or null) from ${tables[0]} where match_id=${match_id} and player_slot in(128,129,130,131,132)) = 1
-          then is_radiant=true
-        else null
-      end
-      ;
-      `,
-      setDatas
-    );
-  }, []);
-
-  /*useEffect(() => {
-    fetchDataJson(
-      `${sql}select * from (select player_slot,item_0,item_1,item_2,item_3,item_4,item_5,item_neutral from ${tables[0]} where match_id=6639618471) as itemlist;`,
-      setDatas
-    );
-  }, []);
-  /*useEffect(() => {
-    fetchDataJson(
-      `${sql}select case when player_slot < 128 then 'Radiant' else 'Dire' end from ${tables[0]} where match_id=6639618471 limit 10;`,
-      setDatas
-    );
-  }, []);
-  /*
-  useEffect(() => {
-    fetchDataJson(
-      `${sql}select item_0 from ${tables[0]} where match_id=6639618471 limit 10;`,
-      setDatas
-    );
-  }, []);
-
-  /*useEffect(() => {
-    fetchDataJson(
-      `${sql}select * from ${tables[0]} where hero_id=60 order by match_id desc limit 100;`,
-      setDatas
-    );
-  }, []);*/
 
   return <div>test</div>;
 }
@@ -328,7 +227,7 @@ export function getHeros(setHeros) {
     setHeros(test);
   }
 
-  const match_count = 3000;
+  const match_count = 5224;
   const use_item_list = `
   (
     1, 36, 37, 40, 43, 48, 50, 63, 65, 67, 69, 73, 75, 77, 79, 81, 86, 88, 90, 92, 94, 96, 98, 100, 
@@ -342,36 +241,66 @@ export function getHeros(setHeros) {
   )
   `;
 
-  const hero_items_table = `
-    (
-      select
-        ${tables[1]}.match_id,
-        hero_id,
-        ARRAY[item_0, item_1, item_2, item_3, item_4, item_5, item_neutral] as items,
-        case
-          when player_slot in(0,1,2,3,4)
-            then radiant_win
-          when player_slot in(128,129,130,131,132)
-            then not radiant_win
-          else null
-        end as win
-      from (select * from ${tables[1]} order by match_id desc limit ${match_count}) as ${tables[1]}
-        inner join ${tables[7]} on ${tables[1]}.match_id=${tables[7]}.match_id
-        right outer join ${tables[0]} on ${tables[1]}.match_id=${tables[0]}.match_id
-      where patch='7.31'
-      order by ${tables[1]}.match_id desc
+  const match_731 = `
+  (
+    select
+      match_id
+    from ${tables[7]}
+    where patch='7.31'
+    order by match_id desc
+    limit ${match_count}
+  ) as match_731`;
+  const match_radiant_win = `
+  (
+    select
+      match_731.match_id,
+      radiant_win
+    from ${match_731}
+      inner join 
+        (select match_id, radiant_win from ${tables[1]} order by match_id desc) as match_win
+        on match_731.match_id = match_win.match_id
+  ) as match_radiant_win`;
+  const match_hero_items = `
+  (
+    select
+      match_id,
+      player_slot,
+      hero_id,
+      ARRAY[item_0, item_1, item_2, item_3, item_4, item_5, item_neutral] as items
+    from ${tables[0]}
+  ) as match_hero_items`;
+  const hero_items_table = `(
+    select
+      match_radiant_win.match_id,
+      hero_id,
+      items,
+      case
+        when player_slot in(0,1,2,3,4)
+          then radiant_win
+        when player_slot in(128,129,130,131,132)
+          then not radiant_win
+        else null
+      end as win
+    from 
+      ${match_radiant_win}
+        inner join ${match_hero_items} on match_radiant_win.match_id = match_hero_items.match_id
   ) as hero_items`;
+  const match_win_item = `
+  (
+    select distinct
+      match_id,
+      win,
+      unnest(items) as item 
+    from ${hero_items_table}
+  ) as item_table`;
   const match_items_table = `
   (
-    select match_id, win, array_agg(item) as item_list
-    from(
-      select distinct
-        match_id,
+    select
+      match_id,
         win,
-        unnest(items) as item 
-      from ${hero_items_table}
-    ) as item_table
-    where item!=0
+        array_agg(item) as item_list
+    from ${match_win_item}
+    where item in ${use_item_list}
     group by match_id, win
   ) as match_items`;
   const hero_enemyitems = `
@@ -394,7 +323,6 @@ export function getHeros(setHeros) {
       count(win=false or null) as lose
     from 
       (select hero_id, win, unnest(enemy_items) as enemy_item from ${hero_enemyitems}) as hero_enemyitems
-    where enemy_item in ${use_item_list}
     group by hero_id, enemy_item
   ) as hero_enemyitem_win_lose`;
   const hero_win_lose = `
@@ -422,24 +350,38 @@ export function getHeros(setHeros) {
         on hero_enemyitem_win_lose.hero_id=hero_win_lose.hero_id
     order by hero_enemyitem_win_lose.hero_id, hero_enemyitem_win_lose.enemy_item
   ) as hero_item_windiff`;
+  const use_item_table = `
+  (
+    select id, localized_name 
+    from ${tables[3]}
+    where id in ${use_item_list}
+    order by id
+  ) as use_item_table`;
+  const hero_item_list = `
+  (
+    select
+    ${tables[2]}.id as hero_id,
+    use_item_table.id as item_id,
+    ${tables[2]}.localized_name as hero,
+    use_item_table.localized_name as item
+    from ${tables[2]} cross join ${use_item_table}
+  ) as hero_item_list`;
 
   useEffect(() => {
     fetchDataJson(
       `${sql}
-      Explain Analyze select 
-        ${tables[2]}.id as id,
-        ${tables[3]}.id as item_id,
-        ${tables[2]}.localized_name as hero,
-        ${tables[3]}.localized_name as item,
+      select 
+        hero_item_list.hero_id,
+        hero_item_list.item_id,
+        hero_item_list.hero,
+        hero_item_list.item,
         coalesce(win_rate_diff, 0) as win_rate_diff,
         coalesce(use_rate, 0) as use_rate
-      from ${tables[2]}
-        right outer join ${tables[3]} on true
+      from ${hero_item_list}
         left outer join ${hero_item_windiff}
-          on hero_item_windiff.hero_id = ${tables[2]}.id
-          and hero_item_windiff.enemy_item = ${tables[3]}.id
-      where ${tables[3]}.id in ${use_item_list}
-      order by id asc
+          on hero_item_windiff.hero_id = hero_item_list.hero_id
+          and hero_item_windiff.enemy_item = hero_item_list.item_id
+      order by hero_id asc
       ;`,
       convertSet
     );

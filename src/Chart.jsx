@@ -136,13 +136,13 @@ function XAxis(props) {
 
 function YAxis(props) {
   return (
-    <g>
+    <g key={"YAxis"}>
       {props.data.map((hero, index) => {
         const x = props.padding.x,
           y = props.scale.y(index + 0.5);
         return (
           <text
-            key={hero.id}
+            key={index}
             x={x - props.textPadding}
             y={y + 2}
             textAnchor="end"
@@ -159,14 +159,14 @@ function YAxis(props) {
 function Content(props) {
   const space = 0.5;
   return (
-    <g>
+    <g key={"Content"}>
       {props.data.map((hero, heroIndex) => {
         return (
-          <g key={hero.id}>
+          <g key={heroIndex}>
             {hero.items.map((item, itemIndex) => {
               return (
                 <rect
-                  key={item.id}
+                  key={itemIndex}
                   x={props.scale.x(itemIndex) + space}
                   y={props.scale.y(heroIndex) + space}
                   width={props.itemSize - space * 2}
