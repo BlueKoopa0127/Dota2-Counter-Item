@@ -1,5 +1,5 @@
 import * as d3 from "d3";
-import { useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 export function ChartTest() {
   const [data, setData] = useState(null);
@@ -53,9 +53,45 @@ export function ChartTest() {
   );
 }
 
-export default function Chart(props) {
+export default function Chart({ width, height, data }) {
+  return (
+    <ZoomableSVG width={width} height={height}>
+      <ChartContent width={width} height={height} data={data} />
+    </ZoomableSVG>
+  );
+}
+
+function ZoomableSVG({ children, width, height }) {
+  console.log("ZoomableSVG");
+  const svgRef = useRef();
+  const [k, setK] = useState(1);
+  const [x, setX] = useState(0);
+  const [y, setY] = useState(0);
+  useEffect(() => {
+    const zoom = d3.zoom().on("zoom", (event) => {
+      const { x, y, k } = event.transform;
+      setK(k);
+      setX(x);
+      setY(y);
+    });
+    d3.select(svgRef.current).call(zoom);
+  }, []);
+  return (
+    <svg ref={svgRef} width={width} height={height}>
+      <BackGround width={width} height={height} />
+      <g transform={`translate(${x},${y})scale(${k})`}>{children}</g>
+      <text x="10" y="50">
+        fixed content
+      </text>
+    </svg>
+  );
+}
+
+function ChartContent({ width, height, data }) {
+  console.log("ChartContent");
+
   const padding = { x: 100, y: 200 };
-  const itemSize = 25,
+  const itemSize = 18,
     textPadding = 5;
   const scale = {
     x: d3
@@ -75,25 +111,24 @@ export default function Chart(props) {
       .nice(),
   };
   return (
-    <svg viewBox={`0 0 ${props.width} ${props.height}`}>
-      <BackGround width={props.width} height={props.height} />
+    <g transform={`translate(${100},${100})`}>
       <XAxis
-        data={props.data}
+        data={data}
         scale={scale}
         padding={padding}
         textPadding={textPadding}
         itemSize={itemSize}
       />
       <YAxis
-        data={props.data}
+        data={data}
         scale={scale}
         padding={padding}
         textPadding={textPadding}
         itemSize={itemSize}
       />
-      <Content data={props.data} scale={scale} itemSize={itemSize} />
+      <Content data={data} scale={scale} itemSize={itemSize} />
       <Legend />
-    </svg>
+    </g>
   );
 }
 
