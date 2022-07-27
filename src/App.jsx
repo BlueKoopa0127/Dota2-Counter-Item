@@ -12,7 +12,7 @@ export default function App() {
 
   return (
     <div>
-      <Chart width={300} height={300} data={heros} />;
+      <Chart width={300} height={300} data={heros} />
     </div>
   );
 }
