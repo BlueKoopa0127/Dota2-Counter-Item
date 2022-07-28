@@ -183,7 +183,7 @@ export function getHeros(setHeros) {
     const heros = Array.from(new Set(json.rows.map(({ hero }) => hero)));
     const test = heros.map((hero) => {
       return {
-        id: json.rows.find((element) => element.hero === hero).id,
+        id: json.rows.find((element) => element.hero === hero).hero_id,
         name: hero,
         items: json.rows
           .filter((element) => element.hero === hero)
