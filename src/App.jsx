@@ -9,10 +9,9 @@ export default function App() {
   if (heros === null) {
     return <div>Loading...</div>;
   }
-
   return (
     <div>
-      <Chart width={300} height={300} data={heros} />
+      <Chart width={800} height={800} data={heros} />
     </div>
   );
 }
