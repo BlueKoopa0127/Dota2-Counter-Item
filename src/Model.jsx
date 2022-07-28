@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import * as d3 from "d3";
 
 export function ModelTest() {
   const [data, setData] = useState(null);
@@ -198,7 +199,8 @@ export function getHeros(setHeros) {
       };
     });
     console.log(convert);
-    setHeros(convert);
+    setHeros(d3.sort(new Set(convert), (d) => d.items[2].useRate));
+    //setHeros(convert);
   }
 
   const match_count = 1000;
