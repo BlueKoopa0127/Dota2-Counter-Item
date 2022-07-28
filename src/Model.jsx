@@ -181,7 +181,7 @@ export function getHeros(setHeros) {
 
   function convertSet(json) {
     const heros = Array.from(new Set(json.rows.map(({ hero }) => hero)));
-    const test = heros.map((hero) => {
+    const convert = heros.map((hero) => {
       return {
         id: json.rows.find((element) => element.hero === hero).hero_id,
         name: hero,
@@ -197,8 +197,8 @@ export function getHeros(setHeros) {
           }),
       };
     });
-    console.log(test);
-    setHeros(test);
+    console.log(convert);
+    setHeros(convert);
   }
 
   const match_count = 1000;
