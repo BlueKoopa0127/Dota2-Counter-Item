@@ -206,10 +206,10 @@ function Content(props) {
                   y={props.scale.y(heroIndex) + space}
                   width={props.itemSize - space * 2}
                   height={props.itemSize - space * 2}
-                  fill={props.scale.color(item.winRateDiff)}
+                  fill={props.scale.color(item.useRate)}
                 >
                   <title>
-                    {hero.name} * {item.name} ({item.winRateDiff})
+                    {hero.name} * {item.name} ({item.useRate})
                   </title>
                 </rect>
               );
