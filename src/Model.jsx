@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 export function ModelTest() {
+  const [data, setData] = useState(null);
   const sql = "https://api.opendota.com/api/explorer?sql=";
   const tables = [
     "player_matches",
@@ -13,14 +14,7 @@ export function ModelTest() {
     "match_logs",
     "match_patch",
   ];
-  const [columns, setColumns] = useState(null);
-  const [heros, setHeros] = useState(null);
-  const [items, setItems] = useState(null);
-  const [datas, setDatas] = useState(null);
-
-  const hero_id = 1;
-  const match_id = 6661221608;
-  const match_count = 10224;
+  const match_count = 10;
   const use_item_list = `
   (
     1, 36, 37, 40, 43, 48, 50, 63, 65, 67, 69, 73, 75, 77, 79, 81, 86, 88, 90, 92, 94, 96, 98, 100, 
@@ -39,11 +33,9 @@ export function ModelTest() {
     select
       match_id
     from ${tables[7]}
-    where patch='7.31'
     order by match_id desc
     limit ${match_count}
   ) as match_731`;
-
   const match_radiant_win = `
   (
     select
@@ -54,7 +46,6 @@ export function ModelTest() {
         (select match_id, radiant_win from ${tables[1]} order by match_id desc) as match_win
         on match_731.match_id = match_win.match_id
   ) as match_radiant_win`;
-
   const match_hero_items = `
   (
     select
@@ -64,7 +55,6 @@ export function ModelTest() {
       ARRAY[item_0, item_1, item_2, item_3, item_4, item_5, item_neutral] as items
     from ${tables[0]}
   ) as match_hero_items`;
-
   const hero_items_table = `(
     select
       match_radiant_win.match_id,
@@ -81,7 +71,6 @@ export function ModelTest() {
       ${match_radiant_win}
         inner join ${match_hero_items} on match_radiant_win.match_id = match_hero_items.match_id
   ) as hero_items`;
-
   const match_win_item = `
   (
     select distinct
@@ -90,7 +79,6 @@ export function ModelTest() {
       unnest(items) as item 
     from ${hero_items_table}
   ) as item_table`;
-
   const match_items_table = `
   (
     select
@@ -133,7 +121,6 @@ export function ModelTest() {
     group by hero_id
     order by hero_id
   ) as hero_win_lose`;
-
   const hero_item_windiff = `(
     select
       hero_enemyitem_win_lose.hero_id,
@@ -149,7 +136,6 @@ export function ModelTest() {
         on hero_enemyitem_win_lose.hero_id=hero_win_lose.hero_id
     order by hero_enemyitem_win_lose.hero_id, hero_enemyitem_win_lose.enemy_item
   ) as hero_item_windiff`;
-
   const use_item_table = `
   (
     select id, localized_name 
@@ -157,7 +143,6 @@ export function ModelTest() {
     where id in ${use_item_list}
     order by id
   ) as use_item_table`;
-
   const hero_item_list = `
   (
     select
@@ -171,23 +156,12 @@ export function ModelTest() {
   useEffect(() => {
     fetchDataJson(
       `${sql}
-      select 
-        hero_item_list.hero_id,
-        hero_item_list.item_id,
-        hero_item_list.hero,
-        hero_item_list.item,
-        coalesce(win_rate_diff, 0) as win_rate_diff,
-        coalesce(use_rate, 0) as use_rate
-      from ${hero_item_list}
-        left outer join ${hero_item_windiff}
-          on hero_item_windiff.hero_id = hero_item_list.hero_id
-          and hero_item_windiff.enemy_item = hero_item_list.item_id
-      order by hero_id asc
+      select *
+      from ${hero_item_windiff}
       ;`,
-      setDatas
+      setData
     );
   }, []);
-
   return <div>test</div>;
 }
 
@@ -227,7 +201,7 @@ export function getHeros(setHeros) {
     setHeros(test);
   }
 
-  const match_count = 5224;
+  const match_count = 1000;
   const use_item_list = `
   (
     1, 36, 37, 40, 43, 48, 50, 63, 65, 67, 69, 73, 75, 77, 79, 81, 86, 88, 90, 92, 94, 96, 98, 100, 
@@ -246,7 +220,6 @@ export function getHeros(setHeros) {
     select
       match_id
     from ${tables[7]}
-    where patch='7.31'
     order by match_id desc
     limit ${match_count}
   ) as match_731`;
@@ -392,5 +365,6 @@ async function fetchDataJson(url, setData) {
   const response = await fetch(url);
   const json = await response.json();
   console.log(json);
+  console.log(json.rows.map((e) => e["QUERY PLAN"]));
   setData(json);
 }
