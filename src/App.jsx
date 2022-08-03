@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import Chart from "./Chart";
 import { getHeros } from "./Model";
+import "bulma/css/bulma.css";
 
 export default function App() {
   const [heros, setHeros] = useState(null);
@@ -16,8 +17,10 @@ export default function App() {
     }
   }
   return (
-    <div>
-      <Chart width={800} height={800} data={heros} />
+    <div className="container">
+      <div className="is-vcentered">
+        <Chart width={3200} height={2600} data={heros} />
+      </div>
     </div>
   );
 }
