@@ -117,6 +117,7 @@ function ChartContent({ width, height, data }) {
         padding={padding}
         textPadding={textPadding}
         itemSize={itemSize}
+        pattern={"ghost"}
       />
       <YAxis
         data={data}
@@ -124,6 +125,7 @@ function ChartContent({ width, height, data }) {
         padding={padding}
         textPadding={textPadding}
         itemSize={itemSize}
+        pattern={"ghost"}
       />
       <Content data={data} scale={scale} itemSize={itemSize} />
     </g>
@@ -150,6 +152,8 @@ function XAxis(props) {
       {props.data[0].items.map((item, index) => {
         const x = props.scale.x(index + 0.5),
           y = props.padding.y;
+        const col =
+          item.name.toLowerCase().indexOf(props.pattern) > -1 ? "red" : "black";
         return (
           <text
             key={item.id}
@@ -158,6 +162,7 @@ function XAxis(props) {
             textAnchor="start"
             dominantBaseline="middle"
             transform={`rotate(-90, ${x}, ${y})`}
+            fill={col}
           >
             {item.name}
           </text>
@@ -173,6 +178,8 @@ function YAxis(props) {
       {props.data.map((hero, index) => {
         const x = props.padding.x,
           y = props.scale.y(index + 0.5);
+        const col =
+          hero.name.toLowerCase().indexOf(props.pattern) > -1 ? "red" : "black";
         return (
           <text
             key={index}
@@ -180,6 +187,7 @@ function YAxis(props) {
             y={y + 2}
             textAnchor="end"
             dominantBaseline="middle"
+            fill={col}
           >
             {hero.name}
           </text>
