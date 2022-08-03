@@ -11,7 +11,9 @@ export default function App() {
     return <div>Loading...</div>;
   }
   if ("err" in heros) {
-    return <div>Error</div>;
+    if (heros.err != null) {
+      return <div>Error</div>;
+    }
   }
   return (
     <div>
