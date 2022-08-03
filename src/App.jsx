@@ -5,9 +5,13 @@ import { getHeros } from "./Model";
 export default function App() {
   const [heros, setHeros] = useState(null);
   getHeros(setHeros);
+  console.log(heros);
 
   if (heros === null) {
     return <div>Loading...</div>;
+  }
+  if ("err" in heros) {
+    return <div>Error</div>;
   }
   return (
     <div>

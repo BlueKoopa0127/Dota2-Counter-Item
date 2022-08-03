@@ -181,6 +181,11 @@ export function getHeros(setHeros) {
   ];
 
   function convertSet(json) {
+    if ("err" in json) {
+      console.log("err");
+      setHeros(json);
+      return;
+    }
     const heros = Array.from(new Set(json.rows.map(({ hero }) => hero)));
     const convert = heros.map((hero) => {
       return {
@@ -203,7 +208,7 @@ export function getHeros(setHeros) {
     //setHeros(convert);
   }
 
-  const match_count = 1000;
+  const match_count = 10000;
   const use_item_list = `
   (
     1, 36, 37, 40, 43, 48, 50, 63, 65, 67, 69, 73, 75, 77, 79, 81, 86, 88, 90, 92, 94, 96, 98, 100, 
@@ -367,6 +372,6 @@ async function fetchDataJson(url, setData) {
   const response = await fetch(url);
   const json = await response.json();
   console.log(json);
-  console.log(json.rows.map((e) => e["QUERY PLAN"]));
+  //console.log(json.rows.map((e) => e["QUERY PLAN"]));
   setData(json);
 }

@@ -55,14 +55,16 @@ export function ChartTest() {
 
 export default function Chart({ width, height, data }) {
   return (
-    <ZoomableSVG width={width} height={height}>
-      <ChartContent width={width} height={height} data={data} />
-    </ZoomableSVG>
+    <div>
+      <ZoomableSVG width={width} height={height}>
+        <ChartContent width={width} height={height} data={data} />
+      </ZoomableSVG>
+    </div>
   );
 }
 
 function ZoomableSVG({ children, width, height }) {
-  console.log("ZoomableSVG");
+  //console.log("ZoomableSVG");
   const svgRef = useRef();
   const [k, setK] = useState(1);
   const [x, setX] = useState(0);
@@ -88,7 +90,7 @@ function ZoomableSVG({ children, width, height }) {
 }
 
 function ChartContent({ width, height, data }) {
-  console.log("ChartContent");
+  //console.log("ChartContent");
 
   const padding = { x: 100, y: 200 };
   const itemSize = 18,
