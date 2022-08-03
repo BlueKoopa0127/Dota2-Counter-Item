@@ -79,12 +79,9 @@ function ZoomableSVG({ children, width, height }) {
     d3.select(svgRef.current).call(zoom);
   }, []);
   return (
-    <svg ref={svgRef} width={width} height={height}>
+    <svg ref={svgRef} viewBox={`0 0 ${width} ${height}`}>
       <BackGround width={width} height={height} />
       <g transform={`translate(${x},${y})scale(${k})`}>{children}</g>
-      <text x="10" y="50">
-        fixed content
-      </text>
     </svg>
   );
 }
@@ -92,7 +89,7 @@ function ZoomableSVG({ children, width, height }) {
 function ChartContent({ width, height, data }) {
   //console.log("ChartContent");
 
-  const padding = { x: 100, y: 200 };
+  const padding = { x: 50, y: 150 };
   const itemSize = 18,
     textPadding = 5;
   const scale = {
@@ -129,7 +126,6 @@ function ChartContent({ width, height, data }) {
         itemSize={itemSize}
       />
       <Content data={data} scale={scale} itemSize={itemSize} />
-      <Legend />
     </g>
   );
 }
