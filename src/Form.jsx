@@ -1,6 +1,6 @@
 export default function Form({ ChangeShowValue, setFindBox }) {
   return (
-    <div>
+    <div className="box">
       <DropBox ChangeShowValue={ChangeShowValue} />
       <FindBox setFindBox={setFindBox} />
     </div>

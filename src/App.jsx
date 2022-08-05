@@ -124,20 +124,73 @@ export default function App() {
   }
 
   return (
-    <div className="container">
-      <div className="is-vcentered">
-        <Form ChangeShowValue={ChangeShowValue} setFindBox={setFindBox} />
-        <Chart
-          width={3200}
-          height={2600}
-          data={heros}
-          xAxis={itemAxis}
-          setXAxis={createItemAxis}
-          yAxis={heroAxis}
-          setYAxis={createHeroAxis}
-          findBox={findBox}
-        />
+    <div>
+      <Title titleName={"Dota2 Counter Item"} />
+      <div className="container">
+        <div className="is-vcentered">
+          <HowTo />
+          <Form ChangeShowValue={ChangeShowValue} setFindBox={setFindBox} />
+          <Chart
+            width={3200}
+            height={2600}
+            data={heros}
+            xAxis={itemAxis}
+            setXAxis={createItemAxis}
+            yAxis={heroAxis}
+            setYAxis={createHeroAxis}
+            findBox={findBox}
+          />
+        </div>
       </div>
+    </div>
+  );
+}
+
+function Title({ titleName }) {
+  return (
+    <section className="hero is-light">
+      <div className="hero-body">
+        <div className="container is-max-desktop">
+          <p className="title">{titleName}</p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function HowTo() {
+  return (
+    <div className="content box">
+      <h2>表の見方</h2>
+      <ul>
+        <li>Y軸がヒーロー、X軸がアイテムを示している。</li>
+        <li>ヒーローに対するアイテムの勝率、使用率が色となって表示される。</li>
+        <li>赤色が強い程、ヒーローに対してアイテムが有効である。</li>
+        <li>
+          例：左上のマスだとAnti-Mageに対してブリンクダガーを買ったチームは8.3%程度いつもより負けている。
+        </li>
+      </ul>
+      <h2>使い方</h2>
+      <ul>
+        <li>フォームの使い方</li>
+        <ul>
+          <li>
+            「表示したいデータ」で使用率などの表示したいデータを選択すると色として表示されるデータが選択されたものに変更される。
+          </li>
+          <li>
+            「ヒーロー、アイテムの検索」に知りたいヒーロー、アイテムの名前を入力すると部分一致するヒーロー、アイテムが強調される
+          </li>
+        </ul>
+        <li>表の使い方</li>
+        <ul>
+          <li>
+            表のヒーロー、アイテム名をクリックするとそれを基準に降順ソートされる。
+          </li>
+          <li>
+            表の色がついている要素にカーソルを当てていると具体的な数値が表示される。
+          </li>
+        </ul>
+      </ul>
     </div>
   );
 }

@@ -209,7 +209,7 @@ export function getHeros(setHeros) {
     setHeros(convert);
   }
 
-  const match_count = 1000;
+  const match_count = 100;
   const use_item_list = `
   (
     1, 36, 37, 40, 43, 48, 50, 63, 65, 67, 69, 73, 75, 77, 79, 81, 86, 88, 90, 92, 94, 96, 98, 100, 

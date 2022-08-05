@@ -64,7 +64,7 @@ export default function Chart({
   findBox,
 }) {
   return (
-    <div>
+    <div className="block">
       <ZoomableSVG width={width} height={height}>
         <ChartContent
           data={data}
