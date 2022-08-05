@@ -53,11 +53,17 @@ export function ChartTest() {
   );
 }
 
-export default function Chart({ width, height, data }) {
+export default function Chart({ width, height, data, xAxis, yAxis }) {
   return (
     <div>
       <ZoomableSVG width={width} height={height}>
-        <ChartContent width={width} height={height} data={data} />
+        <ChartContent
+          width={width}
+          height={height}
+          data={data}
+          xAxis={xAxis}
+          yAxis={yAxis}
+        />
       </ZoomableSVG>
     </div>
   );
@@ -86,7 +92,7 @@ function ZoomableSVG({ children, width, height }) {
   );
 }
 
-function ChartContent({ width, height, data }) {
+function ChartContent({ width, height, data, xAxis, yAxis }) {
   //console.log("ChartContent");
 
   const padding = { x: 50, y: 150 };
@@ -112,20 +118,16 @@ function ChartContent({ width, height, data }) {
   return (
     <g transform={`translate(${100},${100})`}>
       <XAxis
-        data={data}
+        data={xAxis}
         scale={scale}
         padding={padding}
         textPadding={textPadding}
-        itemSize={itemSize}
-        pattern={"ghost"}
       />
       <YAxis
-        data={data}
+        data={yAxis}
         scale={scale}
         padding={padding}
         textPadding={textPadding}
-        itemSize={itemSize}
-        pattern={"ghost"}
       />
       <Content data={data} scale={scale} itemSize={itemSize} />
     </g>
@@ -146,18 +148,17 @@ function BackGround(props) {
   );
 }
 
-function XAxis(props) {
+function XAxis({ data, scale, padding, textPadding }) {
   return (
     <g>
-      {props.data[0].items.map((item, index) => {
-        const x = props.scale.x(index + 0.5),
-          y = props.padding.y;
-        const col =
-          item.name.toLowerCase().indexOf(props.pattern) > -1 ? "red" : "black";
+      {data.map((item, index) => {
+        const x = scale.x(index + 0.5),
+          y = padding.y;
+        const col = item.highlight ? "red" : "black";
         return (
           <text
-            key={item.id}
-            x={x + props.textPadding}
+            key={item.name}
+            x={x + textPadding}
             y={y + 2}
             textAnchor="start"
             dominantBaseline="middle"
@@ -172,18 +173,17 @@ function XAxis(props) {
   );
 }
 
-function YAxis(props) {
+function YAxis({ data, scale, padding, textPadding }) {
   return (
     <g key={"YAxis"}>
-      {props.data.map((hero, index) => {
-        const x = props.padding.x,
-          y = props.scale.y(index + 0.5);
-        const col =
-          hero.name.toLowerCase().indexOf(props.pattern) > -1 ? "red" : "black";
+      {data.map((hero, index) => {
+        const x = padding.x,
+          y = scale.y(index + 0.5);
+        const col = hero.highlight ? "red" : "black";
         return (
           <text
-            key={index}
-            x={x - props.textPadding}
+            key={hero.name}
+            x={x - textPadding}
             y={y + 2}
             textAnchor="end"
             dominantBaseline="middle"

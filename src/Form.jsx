@@ -1,8 +1,8 @@
-export default function Form({ ChangeShowValue }) {
+export default function Form({ ChangeShowValue, FindPattern }) {
   return (
     <div>
       <DropBox ChangeShowValue={ChangeShowValue} />
-      <FindBox />
+      <FindBox FindPattern={FindPattern} />
     </div>
   );
 }
@@ -22,7 +22,7 @@ function DropBox({ ChangeShowValue }) {
   );
 }
 
-function FindBox() {
+function FindBox({ FindPattern }) {
   return (
     <div className="field">
       <label className="label">ヒーロー、アイテムの検索</label>
@@ -31,7 +31,7 @@ function FindBox() {
           className="input"
           type="text"
           placeholder="探したいヒーロー名、アイテム名を入力してください"
-          onChange={(e) => console.log(e.target.value)}
+          onChange={(e) => FindPattern(e.target.value)}
         ></input>
       </div>
     </div>
