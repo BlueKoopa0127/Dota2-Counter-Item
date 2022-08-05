@@ -31,7 +31,7 @@ function FindBox({ setFindBox }) {
           className="input"
           type="text"
           placeholder="探したいヒーロー名、アイテム名を入力してください"
-          onChange={(e) => setFindBox(e.target.value)}
+          onChange={(e) => setFindBox(e.target.value.toLowerCase())}
         ></input>
       </div>
     </div>

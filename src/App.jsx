@@ -82,7 +82,8 @@ export default function App() {
         return {
           name: e.name,
           index: e.id,
-          highlight: false,
+          highlight:
+            findBox === "" ? false : e.name.toLowerCase().indexOf(findBox) > -1,
         };
       })
     );
@@ -108,16 +109,15 @@ export default function App() {
       return;
     }
 
-    const p = findBox.toLowerCase();
     setHeroAxis(
       heroAxis.map((h) => {
-        h.highlight = h.name.toLowerCase().indexOf(p) > -1;
+        h.highlight = h.name.toLowerCase().indexOf(findBox) > -1;
         return h;
       })
     );
     setItemAxis(
       itemAxis.map((i) => {
-        i.highlight = i.name.toLowerCase().indexOf(p) > -1;
+        i.highlight = i.name.toLowerCase().indexOf(findBox) > -1;
         return i;
       })
     );
