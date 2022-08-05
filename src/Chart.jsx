@@ -53,16 +53,26 @@ export function ChartTest() {
   );
 }
 
-export default function Chart({ width, height, data, xAxis, yAxis }) {
+export default function Chart({
+  width,
+  height,
+  data,
+  xAxis,
+  setXAxis,
+  yAxis,
+  setYAxis,
+  findBox,
+}) {
   return (
     <div>
       <ZoomableSVG width={width} height={height}>
         <ChartContent
-          width={width}
-          height={height}
           data={data}
           xAxis={xAxis}
+          setXAxis={setXAxis}
           yAxis={yAxis}
+          setYAxis={setYAxis}
+          findBox={findBox}
         />
       </ZoomableSVG>
     </div>
@@ -92,7 +102,7 @@ function ZoomableSVG({ children, width, height }) {
   );
 }
 
-function ChartContent({ width, height, data, xAxis, yAxis }) {
+function ChartContent({ data, xAxis, setXAxis, yAxis, setYAxis, findBox }) {
   //console.log("ChartContent");
 
   const padding = { x: 50, y: 150 };
@@ -118,18 +128,29 @@ function ChartContent({ width, height, data, xAxis, yAxis }) {
   return (
     <g transform={`translate(${100},${100})`}>
       <XAxis
-        data={xAxis}
+        data={data}
+        xAxis={xAxis}
+        setYAxis={setYAxis}
         scale={scale}
         padding={padding}
         textPadding={textPadding}
       />
       <YAxis
-        data={yAxis}
+        data={data}
+        yAxis={yAxis}
+        setXAxis={setXAxis}
         scale={scale}
         padding={padding}
         textPadding={textPadding}
       />
-      <Content data={data} scale={scale} itemSize={itemSize} />
+      <Content
+        data={data}
+        scale={scale}
+        itemSize={itemSize}
+        xAxis={xAxis}
+        yAxis={yAxis}
+        findBox={findBox}
+      />
     </g>
   );
 }
@@ -148,10 +169,10 @@ function BackGround(props) {
   );
 }
 
-function XAxis({ data, scale, padding, textPadding }) {
+function XAxis({ data, xAxis, setYAxis, scale, padding, textPadding }) {
   return (
     <g>
-      {data.map((item, index) => {
+      {xAxis.map((item, index) => {
         const x = scale.x(index + 0.5),
           y = padding.y;
         const col = item.highlight ? "red" : "black";
@@ -164,6 +185,17 @@ function XAxis({ data, scale, padding, textPadding }) {
             dominantBaseline="middle"
             transform={`rotate(-90, ${x}, ${y})`}
             fill={col}
+            style={{ cursor: "pointer" }}
+            onClick={() => {
+              setYAxis(
+                d3.sort(data, (a, b) =>
+                  d3.descending(
+                    a.items[item.index].value,
+                    b.items[item.index].value
+                  )
+                )
+              );
+            }}
           >
             {item.name}
           </text>
@@ -173,10 +205,10 @@ function XAxis({ data, scale, padding, textPadding }) {
   );
 }
 
-function YAxis({ data, scale, padding, textPadding }) {
+function YAxis({ data, yAxis, setXAxis, scale, padding, textPadding }) {
   return (
     <g key={"YAxis"}>
-      {data.map((hero, index) => {
+      {yAxis.map((hero, index) => {
         const x = padding.x,
           y = scale.y(index + 0.5);
         const col = hero.highlight ? "red" : "black";
@@ -188,6 +220,14 @@ function YAxis({ data, scale, padding, textPadding }) {
             textAnchor="end"
             dominantBaseline="middle"
             fill={col}
+            style={{ cursor: "pointer" }}
+            onClick={() => {
+              setXAxis(
+                d3.sort(data[hero.index].items, (a, b) =>
+                  d3.descending(a.value, b.value)
+                )
+              );
+            }}
           >
             {hero.name}
           </text>
@@ -197,22 +237,31 @@ function YAxis({ data, scale, padding, textPadding }) {
   );
 }
 
-function Content(props) {
+function Content({ data, scale, itemSize, xAxis, yAxis, findBox }) {
   const space = 0.5;
   return (
     <g key={"Content"}>
-      {props.data.map((hero, heroIndex) => {
+      {yAxis.map((h, heroIndex) => {
+        const hero = data[h.index];
         return (
-          <g key={heroIndex}>
-            {hero.items.map((item, itemIndex) => {
+          <g key={h.index}>
+            {xAxis.map((i, itemIndex) => {
+              const item = hero.items[i.index];
+              const opa =
+                findBox === ""
+                  ? 1
+                  : h.highlight === false && i.highlight === false
+                  ? 0.1
+                  : 1;
               return (
                 <rect
-                  key={itemIndex}
-                  x={props.scale.x(itemIndex) + space}
-                  y={props.scale.y(heroIndex) + space}
-                  width={props.itemSize - space * 2}
-                  height={props.itemSize - space * 2}
-                  fill={props.scale.color(item.value)}
+                  key={i.index}
+                  x={scale.x(itemIndex) + space}
+                  y={scale.y(heroIndex) + space}
+                  width={itemSize - space * 2}
+                  height={itemSize - space * 2}
+                  fill={scale.color(item.value)}
+                  opacity={opa}
                 >
                   <title>
                     {hero.name} * {item.name} ({item.value})

@@ -187,19 +187,19 @@ export function getHeros(setHeros) {
       return;
     }
     const heros = Array.from(new Set(json.rows.map(({ hero }) => hero)));
-    const convert = heros.map((hero) => {
+    const convert = heros.map((hero, heroIndex) => {
       return {
-        id: json.rows.find((element) => element.hero === hero).hero_id,
+        id: heroIndex,
         name: hero,
         items: json.rows
           .filter((element) => element.hero === hero)
-          .map((element) => {
+          .map((element, index) => {
             return {
-              id: element.item_id,
+              id: index,
               name: element.item,
-              winRateDiff: element.win_rate_diff,
-              useRate: element.use_rate,
-              value: element.win_rate_diff,
+              winRateDiff: parseFloat(element.win_rate_diff),
+              useRate: parseFloat(element.use_rate),
+              value: parseFloat(element.win_rate_diff),
             };
           }),
       };
@@ -209,7 +209,7 @@ export function getHeros(setHeros) {
     setHeros(convert);
   }
 
-  const match_count = 100;
+  const match_count = 1000;
   const use_item_list = `
   (
     1, 36, 37, 40, 43, 48, 50, 63, 65, 67, 69, 73, 75, 77, 79, 81, 86, 88, 90, 92, 94, 96, 98, 100, 

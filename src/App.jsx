@@ -8,28 +8,30 @@ export default function App() {
   const [heros, setHeros] = useState(null);
   const [heroAxis, setHeroAxis] = useState(null);
   const [itemAxis, setItemAxis] = useState(null);
+  const [findBox, setFindBox] = useState("");
+  const createHeroAxis = (array) => {
+    createAxis(array, setHeroAxis);
+  };
+  const createItemAxis = (array) => {
+    createAxis(array, setItemAxis);
+  };
+
   getHeros(setHeros);
 
   useEffect(() => {
     if (heros != null && heroAxis === null && itemAxis === null) {
-      setHeroAxis(
-        Array.from(new Set(heros.map((h) => h.name))).map((e) => {
-          return {
-            name: e,
-            highlight: false,
-          };
-        })
-      );
-      setItemAxis(
-        Array.from(new Set(heros[0].items.map((i) => i.name))).map((e) => {
-          return {
-            name: e,
-            highlight: false,
-          };
-        })
-      );
+      createHeroAxis(heros);
+      createItemAxis(heros[0].items);
+      updateHighlight();
     }
   }, [heros]);
+
+  useEffect(() => {
+    if (heroAxis === null || itemAxis === null) {
+      return;
+    }
+    updateHighlight();
+  }, [findBox]);
 
   console.log(heros);
   console.log(heroAxis);
@@ -65,8 +67,48 @@ export default function App() {
       })
     );
   }
-  function FindPattern(pattern) {
-    const p = pattern.toLowerCase();
+  function createAxis(array, setFunc) {
+    setFunc(
+      Array.from(
+        new Set(
+          array.map((h) => {
+            return {
+              name: h.name,
+              id: h.id,
+            };
+          })
+        )
+      ).map((e) => {
+        return {
+          name: e.name,
+          index: e.id,
+          highlight: false,
+        };
+      })
+    );
+  }
+  function updateHighlight() {
+    if (heroAxis === null || itemAxis === null) {
+      return;
+    }
+    //検索文字列が空なら全てのハイライトを消す
+    if (findBox === "") {
+      setHeroAxis(
+        heroAxis.map((h) => {
+          h.highlight = false;
+          return h;
+        })
+      );
+      setItemAxis(
+        itemAxis.map((i) => {
+          i.highlight = false;
+          return i;
+        })
+      );
+      return;
+    }
+
+    const p = findBox.toLowerCase();
     setHeroAxis(
       heroAxis.map((h) => {
         h.highlight = h.name.toLowerCase().indexOf(p) > -1;
@@ -80,16 +122,20 @@ export default function App() {
       })
     );
   }
+
   return (
     <div className="container">
       <div className="is-vcentered">
-        <Form ChangeShowValue={ChangeShowValue} FindPattern={FindPattern} />
+        <Form ChangeShowValue={ChangeShowValue} setFindBox={setFindBox} />
         <Chart
           width={3200}
           height={2600}
           data={heros}
           xAxis={itemAxis}
+          setXAxis={createItemAxis}
           yAxis={heroAxis}
+          setYAxis={createHeroAxis}
+          findBox={findBox}
         />
       </div>
     </div>
