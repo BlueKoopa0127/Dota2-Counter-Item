@@ -215,7 +215,7 @@ function Content(props) {
                   fill={props.scale.color(item.value)}
                 >
                   <title>
-                    {hero.name} * {item.name} ({item.useRate})
+                    {hero.name} * {item.name} ({item.value})
                   </title>
                 </rect>
               );
