@@ -12,10 +12,10 @@ export default function App() {
   if (heros === null) {
     return <div>Loading...</div>;
   }
-  if ("err" in heros) {
-    if (heros.err != null) {
-      return <div>Error</div>;
-    }
+  if (heros.err != null) {
+    return <div>Error</div>;
+  }
+
   }
   return (
     <div className="container">

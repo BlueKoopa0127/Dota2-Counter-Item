@@ -212,7 +212,7 @@ function Content(props) {
                   y={props.scale.y(heroIndex) + space}
                   width={props.itemSize - space * 2}
                   height={props.itemSize - space * 2}
-                  fill={props.scale.color(item.useRate)}
+                  fill={props.scale.color(item.value)}
                 >
                   <title>
                     {hero.name} * {item.name} ({item.useRate})

@@ -181,12 +181,10 @@ export function getHeros(setHeros) {
   ];
 
   function convertSet(json) {
-    if ("err" in json) {
-      if (json.err != null) {
-        console.log("err");
-        setHeros(json);
-        return;
-      }
+    if (json.err != null) {
+      console.log("err");
+      setHeros(json);
+      return;
     }
     const heros = Array.from(new Set(json.rows.map(({ hero }) => hero)));
     const convert = heros.map((hero) => {
@@ -201,13 +199,14 @@ export function getHeros(setHeros) {
               name: element.item,
               winRateDiff: element.win_rate_diff,
               useRate: element.use_rate,
+              value: element.win_rate_diff,
             };
           }),
       };
     });
     console.log(convert);
-    setHeros(d3.sort(new Set(convert), (d) => d.items[2].useRate));
-    //setHeros(convert);
+    //setHeros(d3.sort(new Set(convert), (d) => d.items[2].useRate));
+    setHeros(convert);
   }
 
   const match_count = 100;
