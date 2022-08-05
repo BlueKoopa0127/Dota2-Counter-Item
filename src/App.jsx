@@ -16,11 +16,45 @@ export default function App() {
     return <div>Error</div>;
   }
 
+  function ChangeShowValue(value) {
+    setHeros(
+      heros.map((h) => {
+        return {
+          id: h.id,
+          name: h.name,
+          items: h.items.map((i) => {
+            if (value === "勝率差") {
+              i.value = i.winRateDiff;
+            } else if (value === "使用率") {
+              i.value = i.useRate;
+            } else if (value === "勝率差 * 使用率") {
+              i.value = i.winRateDiff * i.useRate;
+            }
+            return i;
+          }),
+        };
+      })
+    );
+  }
+  function FindPattern(pattern) {
+    setHeros(
+      heros.map((h) => {
+        return {
+          id: h.id,
+          name: h.name,
+          items: h.items.map((i) => {
+            hl = true;
+            [...pattern].map((e) => console.log(e));
+            return i;
+          }),
+        };
+      })
+    );
   }
   return (
     <div className="container">
       <div className="is-vcentered">
-        <Form />
+        <Form ChangeShowValue={ChangeShowValue} />
         <Chart width={3200} height={2600} data={heros} />
       </div>
     </div>
