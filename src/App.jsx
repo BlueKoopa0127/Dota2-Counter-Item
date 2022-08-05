@@ -15,14 +15,15 @@ export default function App() {
   const createItemAxis = (array) => {
     createAxis(array, setItemAxis);
   };
-
   getHeros(setHeros);
 
   useEffect(() => {
     if (heros != null && heroAxis === null && itemAxis === null) {
-      createHeroAxis(heros);
-      createItemAxis(heros[0].items);
-      updateHighlight();
+      if (!("err" in heros)) {
+        createHeroAxis(heros);
+        createItemAxis(heros[0].items);
+        updateHighlight();
+      }
     }
   }, [heros]);
 
@@ -37,14 +38,32 @@ export default function App() {
   console.log(heroAxis);
   console.log(itemAxis);
 
-  if (heros === null) {
-    return <div>Loading...</div>;
+  function Message({ m, b }) {
+    return (
+      <div className="box has-text-centered">
+        <div>{m}</div>
+        <div>{b}</div>
+      </div>
+    );
   }
-  if (heros.err != null) {
-    return <div>Error</div>;
+
+  if (heros === null) {
+    return <Message m={"読み込み中..."} />;
+  }
+  if ("err" in heros) {
+    return (
+      <Message
+        m={"接続がタイムアウトしました"}
+        b={
+          <button className="button" onClick={() => window.location.reload()}>
+            再読み込み
+          </button>
+        }
+      />
+    );
   }
   if (heroAxis === null || itemAxis === null) {
-    return <div>Loading...</div>;
+    return <Message m={"計算中..."} />;
   }
 
   function ChangeShowValue(value) {
@@ -161,6 +180,8 @@ function Title({ titleName }) {
 function HowTo() {
   return (
     <div className="content box">
+      <h2>使用したデータ</h2>
+      Dota2のプロが出場している最新パッチのリーグの試合1000件
       <h2>表の見方</h2>
       <ul>
         <li>Y軸がヒーロー、X軸がアイテムを示している。</li>
@@ -179,6 +200,10 @@ function HowTo() {
           </li>
           <li>
             「ヒーロー、アイテムの検索」に知りたいヒーロー、アイテムの名前を入力すると部分一致するヒーロー、アイテムが強調される
+          </li>
+          <li>
+            例：spiと入力すると「Spirit Vessel」や「Storm
+            Spirit」などの「spi」を含むものが強調される
           </li>
         </ul>
         <li>表の使い方</li>

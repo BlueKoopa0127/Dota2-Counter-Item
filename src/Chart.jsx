@@ -65,6 +65,7 @@ export default function Chart({
 }) {
   return (
     <div className="block">
+      <Legend width={400} height={100} />
       <ZoomableSVG width={width} height={height}>
         <ChartContent
           data={data}
@@ -185,7 +186,7 @@ function XAxis({ data, xAxis, setYAxis, scale, padding, textPadding }) {
             dominantBaseline="middle"
             transform={`rotate(-90, ${x}, ${y})`}
             fill={col}
-            style={{ cursor: "pointer" }}
+            style={{ cursor: "pointer", userSelect: "none" }}
             onClick={() => {
               setYAxis(
                 d3.sort(data, (a, b) =>
@@ -220,7 +221,7 @@ function YAxis({ data, yAxis, setXAxis, scale, padding, textPadding }) {
             textAnchor="end"
             dominantBaseline="middle"
             fill={col}
-            style={{ cursor: "pointer" }}
+            style={{ cursor: "pointer", userSelect: "none" }}
             onClick={() => {
               setXAxis(
                 d3.sort(data[hero.index].items, (a, b) =>
@@ -276,38 +277,43 @@ function Content({ data, scale, itemSize, xAxis, yAxis, findBox }) {
   );
 }
 
-function Legend(props) {
-  const x = 50,
+function Legend({ width, height }) {
+  const x = 20,
     y = 50,
-    w = 200,
-    h = 50,
+    w = 300,
+    h = 10,
     textY = y - 5;
-  function LegendText(props) {
+  function LegendText({ x, y, n }) {
     return (
       <text
-        x={props.x}
-        y={props.y}
+        x={x}
+        y={y}
         fill="black"
         textAnchor="middle"
         style={{ userSelect: "none" }}
       >
-        {props.n}
+        {n}
       </text>
     );
   }
   return (
-    <g>
-      <defs>
-        <linearGradient id="legend" x1={0} x2={1} y1={0} y2={0}>
-          <stop offset={0} stopColor="blue" />
-          <stop offset={0.5} stopColor="white" />
-          <stop offset={1} stopColor="red" />
-        </linearGradient>
-      </defs>
-      <LegendText x={x} y={textY} n={-1} />
-      <LegendText x={x + w / 2} y={textY} n={0} />
-      <LegendText x={x + w} y={textY} n={1} />
-      <rect x={x} y={y} width={w} height={h} fill="url(#legend)" />
-    </g>
+    <div className="box">
+      <div className="content">
+        <h2>値と色の関係</h2>
+      </div>
+      <svg width={width} height={height}>
+        <defs>
+          <linearGradient id="legend" x1={0} x2={1} y1={0} y2={0}>
+            <stop offset={0} stopColor="blue" />
+            <stop offset={0.5} stopColor="white" />
+            <stop offset={1} stopColor="red" />
+          </linearGradient>
+        </defs>
+        <LegendText x={x} y={textY} n={-1} />
+        <LegendText x={x + w / 2} y={textY} n={0} />
+        <LegendText x={x + w} y={textY} n={1} />
+        <rect x={x} y={y} width={w} height={h} fill="url(#legend)" />
+      </svg>
+    </div>
   );
 }
