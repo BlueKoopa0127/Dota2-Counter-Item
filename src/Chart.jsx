@@ -63,9 +63,23 @@ export default function Chart({
   setYAxis,
   findBox,
 }) {
+  const a = data.map((hero) => d3.extent(hero.items.map((i) => i.value)));
+  const b = Array.prototype.concat.apply([], a);
+  const ex = d3.extent(b);
+  const scaleColor = d3
+    .scaleLinear()
+    .domain([ex[0], 0, ex[1]])
+    .range(["blue", "white", "red"])
+    .nice();
+  const ticks = scaleColor.ticks();
   return (
     <div className="block">
-      <Legend width={400} height={30} />
+      <Legend
+        width={800}
+        height={30}
+        min={ticks[0]}
+        max={ticks[ticks.length - 1]}
+      />
       <ZoomableSVG width={width} height={height}>
         <ChartContent
           data={data}
@@ -74,6 +88,7 @@ export default function Chart({
           yAxis={yAxis}
           setYAxis={setYAxis}
           findBox={findBox}
+          scaleColor={scaleColor}
         />
       </ZoomableSVG>
     </div>
@@ -103,7 +118,15 @@ function ZoomableSVG({ children, width, height }) {
   );
 }
 
-function ChartContent({ data, xAxis, setXAxis, yAxis, setYAxis, findBox }) {
+function ChartContent({
+  data,
+  xAxis,
+  setXAxis,
+  yAxis,
+  setYAxis,
+  findBox,
+  scaleColor,
+}) {
   //console.log("ChartContent");
 
   const padding = { x: 50, y: 150 };
@@ -120,11 +143,7 @@ function ChartContent({ data, xAxis, setXAxis, yAxis, setYAxis, findBox }) {
       .domain([0, 1])
       .range([padding.y, padding.y + itemSize * 1])
       .nice(),
-    color: d3
-      .scaleLinear()
-      .domain([-1, 0, 1])
-      .range(["blue", "white", "red"])
-      .nice(),
+    color: scaleColor,
   };
   return (
     <g transform={`translate(${100},${100})`}>
@@ -277,10 +296,10 @@ function Content({ data, scale, itemSize, xAxis, yAxis, findBox }) {
   );
 }
 
-function Legend({ width, height }) {
-  const x = 20,
+function Legend({ width, height, min, max }) {
+  const x = 100,
     y = 20,
-    w = 300,
+    w = 600,
     h = 10,
     textY = y - 5;
   function LegendText({ x, y, n }) {
@@ -309,9 +328,9 @@ function Legend({ width, height }) {
             <stop offset={1} stopColor="red" />
           </linearGradient>
         </defs>
-        <LegendText x={x} y={textY} n={-1} />
+        <LegendText x={x} y={textY} n={min} />
         <LegendText x={x + w / 2} y={textY} n={0} />
-        <LegendText x={x + w} y={textY} n={1} />
+        <LegendText x={x + w} y={textY} n={max} />
         <rect x={x} y={y} width={w} height={h} fill="url(#legend)" />
       </svg>
     </div>
