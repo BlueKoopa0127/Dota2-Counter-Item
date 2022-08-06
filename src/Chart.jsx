@@ -65,7 +65,7 @@ export default function Chart({
 }) {
   return (
     <div className="block">
-      <Legend width={400} height={100} />
+      <Legend width={400} height={30} />
       <ZoomableSVG width={width} height={height}>
         <ChartContent
           data={data}
@@ -279,7 +279,7 @@ function Content({ data, scale, itemSize, xAxis, yAxis, findBox }) {
 
 function Legend({ width, height }) {
   const x = 20,
-    y = 50,
+    y = 20,
     w = 300,
     h = 10,
     textY = y - 5;
@@ -298,8 +298,8 @@ function Legend({ width, height }) {
   }
   return (
     <div className="box">
-      <div className="content">
-        <h2>値と色の関係</h2>
+      <div className="field">
+        <label className="label">値と色の関係</label>
       </div>
       <svg width={width} height={height}>
         <defs>
